@@ -3,7 +3,8 @@
 # This script simulates a logfile being written in real time
 # to test the rest of the scripts in the ATLAS avro pipeline.
 
-if [ "$#" -ne 2 ]; then
+if [ "$#" -ne 2 ]
+then
     echo "Usage: 1) original logfile, 2) file where to copy the data"
     echo "Script needs a real logfile to be copied into a new file and the path to this other file."
     exit
