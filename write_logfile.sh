@@ -12,18 +12,18 @@ fi
 
 logfile=$1 ; newfile=$2
 
-# Start from the first line of the logfile ($1)
-line_number=1
 # Get the first line of the logfile
 line_text="$( sed "1q;d" ${logfile} )"
+# Start from the first line of the logfile ($1)
+line_number=1
 
 while [ ! -z "$line_text" ]
 do
-  # Generate a random number between 1 and 10, which is the number of
-  # seconds to wait before copying the next line into the other file.
+  # Generate a random number between 1 and 10, which is the number of seconds to wait before copying
+  # the next line into the other file.
   random=$(( ( RANDOM % 10 ) + 1 ))
   sleep $random
-  # Echo the line to the other simulated logfile
+  # Echo the line to the simulated logfile
   echo $line_text >> $newfile
   # then increment the line number and reassign line_text
   ((line_number++))
