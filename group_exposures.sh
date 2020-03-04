@@ -69,9 +69,15 @@ grab_data () {
   echo $exposure_pointing
 }
 
-# Follow log file
-# Parameters: $1 associative array
-follow_log () {
+parse_data () {
+  
+}
+
+# Follow file while being written
+# Parameters: $1 function to execute on each line,
+follow_file () {
+  # Function to execute on each line
+  function=$1
   # Listen to the log file for new lines, starting from the beginning
   last_processed_line=0
   while :
@@ -89,8 +95,8 @@ follow_log () {
         #echo "There are unprocessed lines"
         current_line="$((last_processed_line+1))"
         # Get the exposure and tessellation of the current line
-        exposure_pointing=$(grab_data "$current_line")
-        set -- $exposure_pointing
+        function_result=$($function "$current_line")
+        set -- $function_result
         exposure=$1
         tessellation=$2
         echo "exposure+tessellation $exposure $tessellation"
@@ -113,7 +119,7 @@ follow_log () {
 }
 
 validate_input
-follow_log
+follow_file grab_data
 
 # check folder for changes
 # add file to the map
