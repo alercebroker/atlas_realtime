@@ -1,13 +1,15 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ]
+if [ "$#" -ne 2 ]
 then
-    echo "Usage: 1) logfile to read from"
-    echo "Script needs a logfile to to read and get the exposure names from."
+    echo "Usage: 1) logfile to read from, 2) output file."
+    echo "Script needs a logfile to to read and get the exposure names from and an output file
+    where to write the groups."
     exit
 fi
 
 logfile=$1
+outfile=$2
 # Create map (associative array)
 declare -A groups
 
@@ -33,8 +35,7 @@ do
       set -- $line_text
       exposure=$1
       tessellation=$2
-      echo "exposure $exposure"
-      echo "tessellation $tessellation"
+      echo "exposure+tessellation $exposure $tessellation"
       # Grab value and put it on the map
       current_array=(${groups[$tessellation]})
       # Check if the key tessellation is already in the map, if not, add it
@@ -44,9 +45,8 @@ do
       # TODO: reject if exposure already in the list
       if [ ${#current_array[@]} -eq 4 ]
       then
-        echo "Should be concatenated here: ${groups[$tessellation]}"
+        echo "$tessellation ${groups[$tessellation]}" >> $outfile
       fi
-      sleep 1 # Dummy processing
       # Increment number of processed lines
       last_processed_line="$((last_processed_line+1))"
     done
