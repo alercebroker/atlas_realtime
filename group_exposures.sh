@@ -69,15 +69,33 @@ grab_data () {
   echo $exposure_pointing
 }
 
-parse_data () {
-  
+# Function to process the data gotten from the grab function
+process_data () {
+  data=$1
+  set -- $data
+  exposure=$1
+  tessellation=$2
+  echo "exposure+tessellation $exposure $tessellation"
+  # Grab value and put it on the map
+  current_array=(${groups[$tessellation]})
+  # Check if the key tessellation is already in the map, if not, add it
+  # then add the exposure.
+  current_array+=("$exposure")
+  groups[$tessellation]="${current_array[@]}"
+  # TODO: reject if exposure already in the list
+  if [ ${#current_array[@]} -eq 4 ]
+  then
+    echo "$tessellation ${groups[$tessellation]}" >> "${telescope}${nite}_img.groups"
+  fi
 }
 
 # Follow file while being written
 # Parameters: $1 function to execute on each line,
 follow_file () {
-  # Function to execute on each line
-  function=$1
+  # Function to grab data from each line
+  grab_function=$1
+  # Function to process the data
+  process_function=$2
   # Listen to the log file for new lines, starting from the beginning
   last_processed_line=0
   while :
@@ -95,22 +113,8 @@ follow_file () {
         #echo "There are unprocessed lines"
         current_line="$((last_processed_line+1))"
         # Get the exposure and tessellation of the current line
-        function_result=$($function "$current_line")
-        set -- $function_result
-        exposure=$1
-        tessellation=$2
-        echo "exposure+tessellation $exposure $tessellation"
-        # Grab value and put it on the map
-        current_array=(${groups[$tessellation]})
-        # Check if the key tessellation is already in the map, if not, add it
-        # then add the exposure.
-        current_array+=("$exposure")
-        groups[$tessellation]="${current_array[@]}"
-        # TODO: reject if exposure already in the list
-        if [ ${#current_array[@]} -eq 4 ]
-        then
-          echo "$tessellation ${groups[$tessellation]}" >> "${telescope}${nite}_img.groups"
-        fi
+        data=$($grab_function "$current_line")
+        $process_function "${data[@]}"
         # Increment number of processed lines
         last_processed_line="$((last_processed_line+1))"
       done
@@ -119,12 +123,11 @@ follow_file () {
 }
 
 validate_input
-follow_file grab_data
+follow_file grab_data process_data
 
 # check folder for changes
-# add file to the map
 # stop when there are 4 exposures, call the next script
 # put everything in functions and call the functions from a different script
-# Log file in /atlas/red/02a/58819/02a58819.log
 # The "Object" column contains the observations (preflight and twiflat values should be ignored.)
 # remove the entry from the map
+# headers shouldn't be captured
