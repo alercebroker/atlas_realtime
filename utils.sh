@@ -38,15 +38,15 @@ follow_file () {
 # Check that a file exists and is readable
 # Parameters: $1 file to check
 validate_file () {
-  local logfile=$1
-  local filename=$2
+  local log_file=$1
+  file_name=$2
   if [ ! -f "$log_file" ] ; then
-    echo "Log file ${filename} does not exist."
+    echo "File $file_name does not exist."
     exit
   fi
 
   if [ ! -r "$log_file" ] ; then
-    echo "Log file ${filename} is unreadable"
+    echo "File $file_name is unreadable"
     exit
   fi
 }

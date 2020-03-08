@@ -53,7 +53,7 @@ validate_input () {
   fi
 
   # if the night directory is there and can be opened check whether a log file was produced and can be read
-  validate_file $logfile
+  validate_file $log_file "logfile"
 }
 
 # Get the pointing and exposure database
@@ -81,6 +81,9 @@ process_data () {
   if [ ${#current_array[@]} -eq 4 ]
   then
     echo "$tessellation ${groups[$tessellation]}" >> "${telescope}${nite}_img.groups"
+    # call create objects
+    tolerance="1.9"
+    ./create_objects.sh $tessellation "${telescope}${nite}_img.groups" $tolerance
   fi
 }
 
