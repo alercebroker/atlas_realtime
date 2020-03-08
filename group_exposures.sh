@@ -1,6 +1,9 @@
 #!/bin/bash
 
-# TODO: add comment
+# import utilities
+. ./utils.sh --source-only
+
+# TODO: add usage comment
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 telescope+camera_ID night_number"
     echo "Script needs a telescope + camera id (e.g. 02a) and an ATLAS style night number (e.g. 58XXX)."
@@ -50,15 +53,7 @@ validate_input () {
   fi
 
   # if the night directory is there and can be opened check whether a log file was produced and can be read
-  if [ ! -f "$log_file" ] ; then
-    echo "Log file ${log_file} does not exist."
-    exit
-  fi
-
-  if [ ! -r "$log_file" ] ; then
-    echo "Log file ${log_file} is unreadable"
-    exit
-  fi
+  validate_file $logfile
 }
 
 # Get the pointing and exposure database
@@ -89,45 +84,12 @@ process_data () {
   fi
 }
 
-# Follow file while being written
-# Parameters: $1 function to execute on each line,
-follow_file () {
-  # Function to grab data from each line
-  grab_function=$1
-  # Function to process the data
-  process_function=$2
-  # Listen to the log file for new lines, starting from the beginning
-  last_processed_line=0
-  while :
-  do
-    # Count lines in the log file
-    line_count=$(cat "$log_file" | wc -l)
-    # Get the difference to see if there is something new that needs to be processed
-    difference="$(( line_count - last_processed_line ))"
-    # If there is something
-    if [[ $difference -gt "0" ]]
-    then
-      # TODO: Create a process for each of those lines, this part should guarantee that every line is processed (in order might be better)
-      while [[ $last_processed_line -lt $line_count ]]
-      do
-        #echo "There are unprocessed lines"
-        current_line="$((last_processed_line+1))"
-        # Get the exposure and tessellation of the current line
-        data=$($grab_function "$current_line")
-        $process_function "${data[@]}"
-        # Increment number of processed lines
-        last_processed_line="$((last_processed_line+1))"
-      done
-    fi
-  done
-}
-
+# Execute the main functions
 validate_input
 follow_file grab_data process_data
 
 # check folder for changes
 # stop when there are 4 exposures, call the next script
-# put everything in functions and call the functions from a different script
 # The "Object" column contains the observations (preflight and twiflat values should be ignored.)
 # remove the entry from the map
 # headers shouldn't be captured
