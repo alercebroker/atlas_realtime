@@ -1,6 +1,9 @@
 #!/bin/bash
 
-# TODO: add comment
+# import utilities
+. ./utils.sh --source-only
+
+# TODO: add usage comment
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 telescope+camera_ID night_number"
     echo "Script needs a telescope + camera id (e.g. 02a) and an ATLAS style night number (e.g. 58XXX)."
@@ -50,15 +53,7 @@ validate_input () {
   fi
 
   # if the night directory is there and can be opened check whether a log file was produced and can be read
-  if [ ! -f "$log_file" ] ; then
-    echo "Log file ${log_file} does not exist."
-    exit
-  fi
-
-  if [ ! -r "$log_file" ] ; then
-    echo "Log file ${log_file} is unreadable"
-    exit
-  fi
+  validate_file $logfile
 }
 
 # Get the pointing and exposure database
