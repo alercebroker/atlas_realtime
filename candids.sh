@@ -1,12 +1,12 @@
 #! /bin/bash
 #
-# Compiles the information for candidates in a given tessellation_telnite.objemjd file and 
+# Compiles the information for candidates in a given tessellation_telnite.objemjd file and
 # prepares the directories to translate to .avro format
 #
 
 if [ "$#" -ne 1 ]; then
     echo " "; echo "Usage: $0 tessellation_telnite"
-    echo "Where tessellation_telnite is the directory created by mkobjects.sh, including"
+    echo "Where tessellation_telnite is the directory created by create_objects.sh, including"
     echo "the file tessellation_telnite.objemjd created by times.sh"
     echo " "
     exit
@@ -81,7 +81,7 @@ while read -r candinfo; do
   xy=$(echo ${candinfo} | awk '{print $5,$6}')        # ; echo "${xy}"
   dstamp="${expnome}_${candlab}_dstamp.fits"    #; echo $dstamp
   istamp="${expnome}_${candlab}_istamp.fits"    #; echo $istamp
-##  tstamp="${expnome}_${candlab}_tstamp.fits"    #; echo $tstamp 
+##  tstamp="${expnome}_${candlab}_tstamp.fits"    #; echo $tstamp
 #
   printf "%s\n" "${candinfo}" > "${tessetelnite}/${candfile}"                      # output 1-line file with candidate info
 

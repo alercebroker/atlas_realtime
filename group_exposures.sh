@@ -83,7 +83,7 @@ process_data () {
     echo "$tessellation ${groups[$tessellation]}" >> "${telescope}${nite}_img.groups"
     # call create objects
     tolerance="1.9"
-    ./create_objects.sh $tessellation "${telescope}${nite}_img.groups" $tolerance
+    ./create_objects.sh $tessellation "${telescope}${nite}_img.groups" $tolerance &
   fi
 }
 

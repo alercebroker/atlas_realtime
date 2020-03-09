@@ -76,6 +76,9 @@ else                                    # else everything is ready to look for t
 fi
 /bin/rm "${tessetelnite}/${tesse}_candids.tmp" # Delete temporary file
 # here tessetelnite is ready
+echo "Calling times for ${tesse}"
 ./times.sh ${tessetelnite}
+echo "Calling candids for ${tesse}"
+./candids.sh ${tessetelnite}
 
 echo $(elapsed) "${tessetelnite}" # Report elapsed time
