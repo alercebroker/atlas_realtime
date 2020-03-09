@@ -18,17 +18,14 @@ startime=`date +%s.%N` ; cmd=$0 # <--- define initial parameters for function el
 #echo $(elapsed) # Report elapsed time & calling command
 
 tesse=$1 ; groups_file=$2 # e.g.: tesse: SV341N74
-echo $tesse
-echo $groups_file
+echo "Looking for tessellation $tesse"
 telnite="${groups_file:0:8}" # todo: change this, may be too custom, better to parse '_'. e.g.: 02a58884
 tessetelnite="${tesse}_${telnite}" # e.g.: SV341N74_02a58884
 
 tol=$(echo "$3" | awk '{printf"%s\n",($1/3600.)""}')           # ttt is the tolerance in degrees
 
 # check whether the group file is there and can be read
-echo "before groups file"
 validate_file ${groups_file} "groups"
-echo "after groups file"
 
 # if the file exists and can be read check that the tessellation requested is in the file
 # appends tessellation + exposures
@@ -78,5 +75,7 @@ else                                    # else everything is ready to look for t
   fi
 fi
 /bin/rm "${tessetelnite}/${tesse}_candids.tmp" # Delete temporary file
+# here tessetelnite is ready
+./times.sh ${tessetelnite}
 
 echo $(elapsed) "${tessetelnite}" # Report elapsed time

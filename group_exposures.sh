@@ -70,7 +70,6 @@ process_data () {
   set -- $data
   exposure=$1
   tessellation=$2
-  echo "exposure+tessellation $exposure $tessellation"
   # Grab value and put it on the map
   current_array=(${groups[$tessellation]})
   # Check if the key tessellation is already in the map, if not, add it
@@ -80,6 +79,7 @@ process_data () {
   # TODO: reject if exposure already in the list
   if [ ${#current_array[@]} -eq 4 ]
   then
+    echo "$tessellation ${groups[$tessellation]}"
     echo "$tessellation ${groups[$tessellation]}" >> "${telescope}${nite}_img.groups"
     # call create objects
     tolerance="1.9"
