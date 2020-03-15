@@ -129,3 +129,8 @@ done
 /bin/rm ${tmpmons} ${dmonstastamps} ${imonstastamps} ${tmonstastamps}
 
 echo $(elapsed) "${tessetelnite}"                         # Report elapsed time
+
+##### Here I should call the golang scripts #####
+# candfile="${expnome}_${candlab}.info" is ready here
+echo "${tessetelnite} ${expnome}_${candlab}"
+go run config.go create_records.go generate_alert.go "${tessetelnite}" "${expnome}_${candlab}"
