@@ -53,7 +53,7 @@ validate_input () {
   fi
 
   # if the night directory is there and can be opened check whether a log file was produced and can be read
-  validate_file $logfile
+  validate_file $log_file "logfile"
 }
 
 # Get the pointing and exposure database
@@ -70,7 +70,6 @@ process_data () {
   set -- $data
   exposure=$1
   tessellation=$2
-  echo "exposure+tessellation $exposure $tessellation"
   # Grab value and put it on the map
   current_array=(${groups[$tessellation]})
   # Check if the key tessellation is already in the map, if not, add it
@@ -80,7 +79,11 @@ process_data () {
   # TODO: reject if exposure already in the list
   if [ ${#current_array[@]} -eq 4 ]
   then
+    echo "$tessellation ${groups[$tessellation]}"
     echo "$tessellation ${groups[$tessellation]}" >> "${telescope}${nite}_img.groups"
+    # call create objects
+    tolerance="1.9"
+    ./create_objects.sh $tessellation "${telescope}${nite}_img.groups" $tolerance &
   fi
 }
 

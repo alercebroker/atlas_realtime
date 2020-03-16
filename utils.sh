@@ -38,15 +38,21 @@ follow_file () {
 # Check that a file exists and is readable
 # Parameters: $1 file to check
 validate_file () {
-  local logfile=$1
-
+  local log_file=$1
+  file_name=$2
   if [ ! -f "$log_file" ] ; then
-    echo "Log file ${log_file} does not exist."
+    echo "File $file_name does not exist."
     exit
   fi
 
   if [ ! -r "$log_file" ] ; then
-    echo "Log file ${log_file} is unreadable"
+    echo "File $file_name is unreadable"
     exit
   fi
+}
+
+# Function to report elapsed time since start of script and path of the command issued
+elapsed() {
+  date +%s.%N | awk -v start=$startime -v com=$cmd '{printf "t= %.3f (%s) \n", $1-start, com}'
+  return 0
 }

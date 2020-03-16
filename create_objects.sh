@@ -2,46 +2,37 @@
 #
 # for a given tessellation of a given night grab the associated exposures, find the *.ddc files and output a list of
 # candidate transient objects as an ordered list of ATLAS detections grouped by DEC & RA within a given tolerance
-#
+
+# Import utils
+. ./utils.sh --source-only
+
 if [ "$#" -ne 3 ]; then
-    echo " "; echo "Usage: $0 [tessellation name] [output group file from imggrps.sh] Tolerance"
+    echo " "; echo "Usage: $0 [tessellation name] [output group file from imggrps.sh] tolerance"
     echo "Script asks for an ATLAS style tessellation ID, the imggrps.sh output with the exposures associated to each tessellation,"
     echo "and the tolerance in arcseconds to match detections in different *.ddc files and declare they are the same object." ; echo " "
     exit
 fi
-# Function to report elapsed time since start of script and path of the command issued
-elapsed() {
-  date +%s.%N | awk -v start=$startime -v com=$cmd '{printf "t= %.3f (%s) \n", $1-start, com}'
-  return 0
-}
-startime=`date +%s.%N`     ; cmd=$0                    # <--- define initial parameters for function elapsed
-# Call it with:
-#echo $(elapsed)                                       # Report elapsed time & calling command
 
-tesse=$1 ; grpfile=$2 # e.g.: tesse: SV341N74
-telnite="${grpfile:0:8}" # todo: change this, may be too custom, better to parse '_'. e.g.: 02a58884
+startime=`date +%s.%N` ; cmd=$0 # <--- define initial parameters for function elapsed
+# Call it with:
+#echo $(elapsed) # Report elapsed time & calling command
+
+tesse=$1 ; groups_file=$2 # e.g.: tesse: SV341N74
+echo "Looking for tessellation $tesse"
+telnite="${groups_file:0:8}" # todo: change this, may be too custom, better to parse '_'. e.g.: 02a58884
 tessetelnite="${tesse}_${telnite}" # e.g.: SV341N74_02a58884
 
 tol=$(echo "$3" | awk '{printf"%s\n",($1/3600.)""}')           # ttt is the tolerance in degrees
 
 # check whether the group file is there and can be read
-
-if [ ! -f ${grpfile} ] ; then
-  echo "File ${grpfile} does not exist."
-  exit
-fi
-
-if [ ! -r ${grpfile} ] ; then
-  echo "File ${grpfile} is unreadable"
-  exit
-fi
+validate_file ${groups_file} "groups"
 
 # if the file exists and can be read check that the tessellation requested is in the file
 # appends tessellation + exposures
-istesse+=($(grep ${tesse} ${grpfile}))            # echo "${istesse[*]}"
+istesse+=($(grep ${tesse} ${groups_file}))            # echo "${istesse[*]}"
 
 if [ "${#istesse[@]}" -eq 0 ] ; then
-  echo "Tessellation ${tesse} is not in ${grpfile}." ; echo " "
+  echo "Tessellation ${tesse} is not in ${groups_file}." ; echo " "
   exit
 else                                    # else everything is ready to look for the associated exposures and their products
   if [ -d ${tessetelnite} ] ; then      # If a directory named tessetelnite exists remove it and make it clean again
@@ -60,22 +51,14 @@ else                                    # else everything is ready to look for t
     if [ -f ${ddcfile} ] && [ -r ${ddcfile} ] ; then
       awkword=${awkword}" ${ddcfile}" # awkword is a string with the ddc file paths/names separated by spaces
     else
-      if [ ! -r ${ddcfile}] ; then
-        echo "File ${ddcfile} is unreadable."
-      else
-        echo "File ${ddcfile} does not exist."
-      fi
+      validate_file ${ddcfile} "ddc"
     fi
     diffimg="/atlas/diff/${exp:0:3}/${exp:3:5}/${exp}.diff.fz"       #; echo "${diffimg}"
     if [ -f ${diffimg} ] && [ -r ${diffimg} ] ; then
       diffhead="${exp}.diff.head"                                    #; echo ${diffhead}
       /atlas/bin/fitshdr ${diffimg} > "${tessetelnite}/${diffhead}"    # Store the header of the diff images for further use
     else
-      if [ ! -r ${diffimg}] ; then
-        echo "File ${diffimg} is unreadable."
-      else
-        echo "File ${diffimg} does not exist."
-      fi
+      validate_file ${diffimg} "diffimg"
     fi
   done
   nddc=$(echo ${awkword} | awk '{print NF}')
@@ -91,6 +74,11 @@ else                                    # else everything is ready to look for t
     /atlas/bin/cm 2,1 "${tessetelnite}/${tesse}_candids.tmp" -tol ${tol},d -grp -grporder | awk -v obj=${tessetelnite} '{printf"%s %17s_%04g\n",$0,obj,$1}' > "${tessetelnite}/${tessetelnite}.objects"
   fi
 fi
-/bin/rm "${tessetelnite}/${tesse}_candids.tmp"                          # delete temporary file
+/bin/rm "${tessetelnite}/${tesse}_candids.tmp" # Delete temporary file
+# here tessetelnite is ready
+echo "Calling times for ${tesse}"
+./times.sh ${tessetelnite}
+echo "Calling candids for ${tesse}"
+./candids.sh ${tessetelnite}
 
-echo $(elapsed) "${tessetelnite}"                         # Report elapsed time
+echo $(elapsed) "${tessetelnite}" # Report elapsed time
