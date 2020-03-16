@@ -29,7 +29,7 @@ func openFile(fileName string) *os.File {
 
 func main() {
   // Load the configuration file
-  configuration, err := loadConfiguration("/home/daniela/atlas-avro/config/config.json") // replace by relative path
+  configuration, err := loadConfiguration("config/config.json") // replace by relative path
   if err != nil {
     fmt.Println(err)
   }
@@ -38,6 +38,8 @@ func main() {
   if err != nil {
     log.Fatal(err)
   }
+  // Open data directory
+  output_dir := configuration.OutputDirectory
   // Get initial time
   start := time.Now()
   // Open data directory
@@ -72,7 +74,7 @@ func main() {
     alert_data = append(alert_data, cutouts["science"],
       cutouts["difference"])
     // Open file to write to
-    f, err := os.Create(candid + ".avro")
+    f, err := os.Create(output_dir + "/" + candid + ".avro")
     if err != nil {
       fmt.Println(err)
       return
