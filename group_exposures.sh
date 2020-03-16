@@ -85,7 +85,7 @@ process_data () {
       echo "$tessellation ${groups[$tessellation]}" >> "${telescope}${nite}_img.groups"
       # Call create_objects, next step in the pipeline
       tolerance="1.9"
-      #./create_objects.sh $tessellation "${telescope}${nite}_img.groups" $tolerance &
+      ./create_objects.sh $tessellation "${telescope}${nite}_img.groups" $tolerance &
     fi
   fi
 }
@@ -95,6 +95,5 @@ validate_input
 follow_file grab_data process_data
 
 # check folder for changes
-# The "Object" column contains the observations (preflight and twiflat values should be ignored.)
 # remove the entry from the map
 # headers shouldn't be captured
