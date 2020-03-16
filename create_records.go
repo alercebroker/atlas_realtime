@@ -46,14 +46,12 @@ type AtlasRecord struct {
   Candidate *Candidate `avro:"candidate"`
   Candid string `avro:"candid"`
   ObjectID string `avro:"objectID"`
-  CutoutTemplate *Cutout `avro:"cutoutTemplate"`
   CutoutScience *Cutout `avro:"cutoutScience"`
   CutoutDifference *Cutout `avro:"cutoutDifference"`
 }
 
 // Global map, stamp type to extension name
 var get_extension = map[string]string{
-  "template": "_tstamp.fits", // remove
   "science": "_istamp.fits",
   "difference": "_dstamp.fits",
 }
@@ -160,16 +158,14 @@ func createRecord(data []interface{}) *AtlasRecord {
   Candid := string(data[24].(string))
   ObjectID := string(data[25].(string))
   // data[26] is mjd, this value goes in the candidate
-  CutoutTemplate := data[27].(*Cutout)
-  CutoutScience := data[28].(*Cutout)
-  CutoutDifference := data[29].(*Cutout)
+  CutoutScience := data[27].(*Cutout)
+  CutoutDifference := data[28].(*Cutout)
   // Create atlas record
   atlas_record := AtlasRecord{
     SchemaVersion: SchemaVersion,
     Candidate: Candidate,
     Candid: Candid,
     ObjectID: ObjectID,
-    CutoutTemplate: CutoutTemplate,
     CutoutScience: CutoutScience,
     CutoutDifference: CutoutDifference,
   }
