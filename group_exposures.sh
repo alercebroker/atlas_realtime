@@ -74,8 +74,8 @@ process_data () {
   # Grab value and put it on the map
   current_array=(${groups[$tessellation]})
   # Check whether the key tessellation is already in the map, if not, add it and then add the exposure
-  # If the exposure is not preflight or twiflat
-  if [ "$exposure" -ne "preflight" ] || [ "$exposure" -ne "twiflat" ]
+  # Ignore preflight and twiflat values
+  if [ "$tessellation" != "preflight" ] && [ "$tessellation" != "twiflat" ]
   then
     current_array+=("$exposure")
     groups[$tessellation]="${current_array[@]}"
@@ -86,7 +86,7 @@ process_data () {
       echo "$tessellation ${groups[$tessellation]}" >> "${telescope}${nite}_img.groups"
       # Call create_objects, next step in the pipeline
       tolerance="1.9"
-      ./create_objects.sh $tessellation "${telescope}${nite}_img.groups" $tolerance &
+      #./create_objects.sh $tessellation "${telescope}${nite}_img.groups" $tolerance &
     fi
   fi
 }
