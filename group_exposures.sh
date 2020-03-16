@@ -82,7 +82,6 @@ process_data () {
     # TODO: reject if exposure already in the list
     if [ ${#current_array[@]} -eq 4 ]
     then
-      echo "$tessellation ${groups[$tessellation]}"
       echo "$tessellation ${groups[$tessellation]}" >> "${telescope}${nite}_img.groups"
       # Call create_objects, next step in the pipeline
       tolerance="1.9"
