@@ -133,4 +133,9 @@ echo $(elapsed) "${tessetelnite}"                         # Report elapsed time
 ##### Here I should call the golang scripts #####
 # candfile="${expnome}_${candlab}.info" is ready here
 echo "${tessetelnite} ${expnome}_${candlab}"
+# Create the directory where to put the avro files
+if [ ! -d "avro" ]
+then
+    mkdir avro
+fi
 go run config.go create_records.go generate_alert.go "${tessetelnite}"

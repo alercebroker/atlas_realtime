@@ -7,7 +7,7 @@ import (
 
 // Configuration struct
 type Configuration struct {
-  DataDirectory     string
+  OutputDirectory     string
   SchemaFile        string
 }
 
