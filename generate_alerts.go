@@ -46,7 +46,6 @@ func main() {
   info_extension := ".info"
   // Look for all the info files
   info_files, err := filepath.Glob(directory + "/*" + info_extension)
-  fmt.Println(info_files)
   if err != nil {
     log.Fatal(err)
   }
@@ -56,12 +55,6 @@ func main() {
     content, _ := ioutil.ReadFile(info_file)
     // Put the contents in an array
     contents := strings.Fields(string(content))
-    /*
-    // Beginning of test code
-    for _, field := range info_fields {
-
-    }
-    */
     // Begin by adding the schema version
     schema_version := "0.1"
     alert_data := []interface{}{schema_version}
@@ -76,8 +69,8 @@ func main() {
     // Generate cutouts
     cutouts := createCutouts(directory, candid)
     // and append them
-    alert_data = append(alert_data, cutouts["template"],
-      cutouts["science"], cutouts["difference"])
+    alert_data = append(alert_data, cutouts["science"],
+      cutouts["difference"])
     // Open file to write to
     f, err := os.Create(candid + ".avro")
     if err != nil {
