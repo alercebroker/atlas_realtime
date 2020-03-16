@@ -1,0 +1,4 @@
+{
+  "OutputDirectory": "avro",
+  "SchemaFile": "schema/nested_schema_v3.avsc"
+}

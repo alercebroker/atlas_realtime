@@ -1,0 +1,59 @@
+{
+  "namespace": "atlas",
+  "type": "record",
+  "name": "alert",
+  "doc": "avro schema for ATLAS alerts",
+  "version": "0.1",
+  "fields": [
+    {"name": "schemavsn", "type": "string", "doc": "schema version used"},
+    {"name": "candidate",
+      "type": {
+        "namespace": "atlas",
+        "type": "record",
+        "name": "candidate",
+        "doc": "avro schema for ATLAS candidates",
+        "version": "0.1",
+        "fields": [
+          {"name": "RA", "type": "double", "doc": "RA"},
+          {"name": "Dec", "type": "double", "doc": "Dec"},
+          {"name": "Mag", "type": "double", "doc": "Mag"},
+          {"name": "Dmag", "type": "double", "doc": "Dmag"},
+          {"name": "X", "type": "double", "doc": "X"},
+          {"name": "Y", "type": "double", "doc": "Y"},
+          {"name": "Major", "type": "double", "doc": "Major"},
+          {"name": "Minor", "type": "double", "doc": "Minor"},
+          {"name": "Phi", "type": "double", "doc": "Phi"},
+          {"name": "Det", "type": "double", "doc": "Det"},
+          {"name": "ChiN", "type": "double", "doc": "ChiN"},
+          {"name": "Pvr", "type": "double", "doc": "Pvr"},
+          {"name": "Ptr", "type": "double", "doc": "Ptr"},
+          {"name": "Pmv", "type": "double", "doc": "Pmv"},
+          {"name": "Pkn", "type": "double", "doc": "Pkn"},
+          {"name": "Pno", "type": "double", "doc": "Pno"},
+          {"name": "Pbn", "type": "double", "doc": "Pbn"},
+          {"name": "Pcr", "type": "double", "doc": "Pcr"},
+          {"name": "Pxt", "type": "double", "doc": "Pxt"},
+          {"name": "Psc", "type": "double", "doc": "Psc"},
+          {"name": "Dup", "type": "double", "doc": "Dup"},
+          {"name": "WPflx", "type": "double", "doc": "WPflx"},
+          {"name": "Dflx", "type": "double", "doc": "Dflx"},
+          {"name": "Mjd", "type": "double", "doc": "Mjd"}
+        ]
+      }, "default": null},
+    {"name": "candid", "type": "string", "doc": "alert identifier"},
+    {"name": "objectID", "type": "string", "doc": "object identifier"},
+    {"name": "cutoutScience",
+      "type": {
+        "namespace": "atlas",
+        "type": "record",
+        "name": "cutout",
+        "doc": "avro schema for ATLAS cutouts",
+        "version": "0.1",
+        "fields": [
+          {"name": "fileName", "type": "string"},
+          {"name": "stampData", "type": "bytes", "doc": "fits.gz"}
+        ]
+      }, "default": null},
+    {"name": "cutoutDifference", "type": "atlas.cutout", "default": null}
+  ]
+}
