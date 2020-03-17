@@ -1,9 +1,10 @@
 #!/bin/bash
+#
+# For a given telescope and camera and a given night, group the exposures based on the corresponding tessellation.
 
-# import utilities
+# Import utilities
 . ./utils.sh --source-only
 
-# TODO: add usage comment
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 telescope+camera_ID night_number"
     echo "Script needs a telescope + camera id (e.g. 02a) and an ATLAS style night number (e.g. 58XXX)."
@@ -12,7 +13,7 @@ fi
 
 telescope=$1 ; nite=$2
 
-# Global variables
+## Global variables ##
 # Path to log file
 log_path="/atlas/red"
 log_file="${log_path}/${telescope}/${nite}/${telescope}${nite}.log"
@@ -52,12 +53,12 @@ validate_input () {
     exit
   fi
 
-  # if the night directory is there and can be opened check whether a log file was produced and can be read
+  # If the nite's directory is there and can be opened, check whether a log file was produced and can be read
   validate_file $log_file "logfile"
 }
 
-# Get the pointing and exposure database
-# Parameter: $1 current line
+# Get the pointing and exposure data
+# Parameter: $1, current line
 grab_data () {
   local current_line=$1
   exposure_pointing="$( sed "${current_line}q;d" ${log_file} | awk '{print $1, $17}' )"
@@ -72,18 +73,20 @@ process_data () {
   tessellation=$2
   # Grab value and put it on the map
   current_array=(${groups[$tessellation]})
-  # Check if the key tessellation is already in the map, if not, add it
-  # then add the exposure.
-  current_array+=("$exposure")
-  groups[$tessellation]="${current_array[@]}"
-  # TODO: reject if exposure already in the list
-  if [ ${#current_array[@]} -eq 4 ]
+  # Check whether the key tessellation is already in the map, if not, add it and then add the exposure
+  # Ignore preflight and twiflat values
+  if [ "$tessellation" != "preflight" ] && [ "$tessellation" != "twiflat" ]
   then
-    echo "$tessellation ${groups[$tessellation]}"
-    echo "$tessellation ${groups[$tessellation]}" >> "${telescope}${nite}_img.groups"
-    # call create objects
-    tolerance="1.9"
-    ./create_objects.sh $tessellation "${telescope}${nite}_img.groups" $tolerance &
+    current_array+=("$exposure")
+    groups[$tessellation]="${current_array[@]}"
+    # TODO: reject if exposure already in the list
+    if [ ${#current_array[@]} -eq 4 ]
+    then
+      echo "$tessellation ${groups[$tessellation]}" >> "${telescope}${nite}_img.groups"
+      # Call create_objects, next step in the pipeline
+      tolerance="1.9"
+      ./create_objects.sh $tessellation "${telescope}${nite}_img.groups" $tolerance &
+    fi
   fi
 }
 
@@ -92,7 +95,5 @@ validate_input
 follow_file grab_data process_data
 
 # check folder for changes
-# stop when there are 4 exposures, call the next script
-# The "Object" column contains the observations (preflight and twiflat values should be ignored.)
 # remove the entry from the map
 # headers shouldn't be captured
