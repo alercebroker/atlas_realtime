@@ -58,6 +58,7 @@ wait_for_file () {
   while [ ! -f $file ]
   do
     sleep $time
+    echo "sleeping"
   done
 }
 
