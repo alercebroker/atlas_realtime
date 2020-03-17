@@ -14,22 +14,21 @@ if [ "$#" -ne 3 ]; then
 fi
 
 startime=`date +%s.%N` ; cmd=$0 # <--- define initial parameters for function elapsed
-# Call it with:
-#echo $(elapsed) # Report elapsed time & calling command
+# Call it with: echo $(elapsed) # Report elapsed time & calling command
 
 tesse=$1 ; groups_file=$2 # e.g.: tesse: SV341N74
 echo "Looking for tessellation $tesse"
 telnite="${groups_file:0:8}" # todo: change this, may be too custom, better to parse '_'. e.g.: 02a58884
 tessetelnite="${tesse}_${telnite}" # e.g.: SV341N74_02a58884
 
-tol=$(echo "$3" | awk '{printf"%s\n",($1/3600.)""}')           # ttt is the tolerance in degrees
+tol=$(echo "$3" | awk '{printf"%s\n",($1/3600.)""}') # ttt is the tolerance in degrees
 
-# check whether the group file is there and can be read
+# Check whether the group file is there and can be read
 validate_file ${groups_file} "groups"
 
-# if the file exists and can be read check that the tessellation requested is in the file
-# appends tessellation + exposures
-istesse+=($(grep ${tesse} ${groups_file}))            # echo "${istesse[*]}"
+# If the file exists and can be read check that the tessellation requested is in the file
+# Append tessellation + exposures
+istesse+=($(grep ${tesse} ${groups_file})) # echo "${istesse[*]}"
 
 if [ "${#istesse[@]}" -eq 0 ] ; then
   echo "Tessellation ${tesse} is not in ${groups_file}." ; echo " "
@@ -47,11 +46,13 @@ else                                    # else everything is ready to look for t
   for (( i = 1 ; i <= (${#istesse[@]}-1); i++ )) ; do # do this for every argument but the tessellation
     exp="${istesse[i]}"
     ddcfile="/atlas/diff/${exp:0:3}/${exp:3:5}/${exp}.ddc" #; echo "${ddcfile}" # second argument is how many characters to take
-    # if the file exists and is readable
+    # Wait for the creation of the ddc file
+    wait_for_file ${ddcfile} "2"
+    # If the file exists and is readable
     if [ -f ${ddcfile} ] && [ -r ${ddcfile} ] ; then
       awkword=${awkword}" ${ddcfile}" # awkword is a string with the ddc file paths/names separated by spaces
     else
-      validate_file ${ddcfile} "ddc"
+      validate_file ${ddcfile} "ddc" # Todo: unefficient
     fi
     diffimg="/atlas/diff/${exp:0:3}/${exp:3:5}/${exp}.diff.fz"       #; echo "${diffimg}"
     if [ -f ${diffimg} ] && [ -r ${diffimg} ] ; then

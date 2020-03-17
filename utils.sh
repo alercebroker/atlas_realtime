@@ -51,6 +51,16 @@ validate_file () {
   fi
 }
 
+# Wait for the file to be created
+wait_for_file () {
+  local file=$1
+  local time=$2
+  while [ ! -f $file ]
+  do
+    sleep $time
+  done
+}
+
 # Function to report elapsed time since start of script and path of the command issued
 elapsed() {
   date +%s.%N | awk -v start=$startime -v com=$cmd '{printf "t= %.3f (%s) \n", $1-start, com}'
