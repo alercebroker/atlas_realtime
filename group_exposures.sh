@@ -93,7 +93,3 @@ process_data () {
 # Execute the main functions
 validate_input
 follow_file grab_data process_data
-
-# check folder for changes
-# remove the entry from the map
-# headers shouldn't be captured
