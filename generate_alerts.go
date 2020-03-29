@@ -2,6 +2,7 @@ package main
 
 import (
   "bytes"
+  "container/list"
   "fmt"
   "gopkg.in/avro.v0"
   "io/ioutil"
@@ -16,6 +17,8 @@ import (
 var info_fields = [...]string{"RA", "Dec", "Mag", "Dmag", "X", "Y", "Major",
 "Minor", "Phi", "Det", "ChiN", "Pvr", "Ptr", "Pmv", "Pkn", "Pno", "Pbn",
 "Pcr", "Pxt", "Psc", "Dup", "WPflx", "Dflx", "Candid", "ObjectID", "Mjd"}
+// Global avro queue
+avro_queue := list.New()
 
 // Open and return file
 func openFile(fileName string) *os.File {
