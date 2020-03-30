@@ -9,7 +9,9 @@ The ATLAS pipeline consists of several Bash and Golang concatenated scripts. The
 
 #### Current pipeline
 
-![](doc/images/atlas-pipeline.png)
+<p align="center">
+  <img src="doc/images/atlas-pipeline.png">
+</p>
 
 #### Envisioned pipeline
 
@@ -17,7 +19,9 @@ The current pipeline is missing a couple of key features. Currently, the AVRO fi
 
 An AVRO queue will be required to send the files as they are generated. Also, the way in which `candids.sh` connects to `generate_alerts.go` makes the latter generate many of the files more than once, this MUST be improved.
 
-![](doc/images/atlas-envisioned.png)
+<p align="center">
+  <img src="doc/images/atlas-envisioned.png">
+</p>
 
 ***
 ### Scripts
