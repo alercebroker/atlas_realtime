@@ -5,9 +5,19 @@ This repository contains the files of the first prototype of ATLAS real-time pip
 
 ### General description
 
-The ATLAS pipeline consists of several Bash and Golang concatenated scripts. It requires a telescope and night in the ATLAS format as input and creates the AVRO files of that telescope and night as a result.
+The ATLAS pipeline consists of several Bash and Golang concatenated scripts. The current version requires a telescope and night in the ATLAS format as input and creates the AVRO files of that telescope and night as a result.
+
+#### Current pipeline
 
 ![](doc/images/atlas-pipeline.png)
+
+#### Envisioned pipeline
+
+The current pipeline is missing a couple of key features. Currently, the AVRO files are generated but there is no producer sending those files to a Kafka cluster. The code for the producer can be found on the `producer.go` file.
+
+An AVRO queue will be required to send the files as they are generated. Also, the way in which `candids.sh` connects to `generate_alerts.go` makes the latter generate many of the files more than once, this MUST be improved.
+
+![](doc/images/atlas-envisioned.png)
 
 ***
 ### Scripts
@@ -55,3 +65,31 @@ and then the script proceeds to check if the line is in the file. This behavior
 is inefficient and a remnant of a previous version of the pipeline and should be
 replaced by one that simply receives the arguments and uses them.
 ```
+
+#### times.sh
+
+This script grabs the time information from the objects and exposures files and computes the `mjd` of each object as the average mjd of the exposures where that object appears.
+
+#### candids.sh
+
+This script compiles the information for candidates in a given `tessellation_telnite.objemjd` file and prepares the directories to translate to AVRO format. The candidates' information is stored in `.info` files.
+
+#### config.go
+
+Contains the configuration structure and loads the configuration file for the other Golang files.
+
+#### create_records.go
+
+Puts the candidate's info, its stamps and other fields together, so the data is ready to be converted to AVRO format.
+
+#### generate_alerts.go
+
+Takes all the `.info` files available in the input directory and creates an AVRO file for each of them.
+
+#### utils.sh
+
+Contains functions used by more than one of the scripts of the pipeline. More functions need to be added in order to simplify the code of the scripts.
+
+#### producer.go
+
+A Kafka producer written in Go.
