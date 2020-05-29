@@ -109,6 +109,9 @@ func main() {
     }
     // Close the file
     fileWriter.Close()
+
+    //send avro alert to kafka
+    produce(output_dir + "/" + candid + ".avro")
   }
   elapsed := time.Since(start)
   log.Printf("Processing took %s", elapsed)

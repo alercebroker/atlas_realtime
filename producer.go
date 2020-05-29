@@ -7,14 +7,15 @@ import (
 	"log"
 )
 
-func main() {
-  // Open AVRO file to send
-	f, err := ioutil.ReadFile("alert.avro")
+func produce(file string) {
+
+    // Open AVRO file to send
+	f, err := ioutil.ReadFile(file)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "test.alerce.online:9092"})
+	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "kafka.alerce.online:9092"})
 	if err != nil {
 		panic(err)
 	}
