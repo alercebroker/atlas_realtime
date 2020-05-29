@@ -138,4 +138,4 @@ if [ ! -d "avro" ]
 then
     mkdir avro
 fi
-go run config.go create_records.go generate_alerts.go "${tessetelnite}"
+go run config.go create_records.go producer.go generate_alerts.go "${tessetelnite}"
