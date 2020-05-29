@@ -3,7 +3,6 @@ package main
 import (
   //"fmt"
   "io/ioutil"
-  "log"
   "strconv"
 )
 
@@ -64,10 +63,7 @@ func createCutouts(directory string, candid string) map[string]*Cutout {
     // Cutout name
     cutout_file_name := candid + get_extension[kind]
     // Read stamp data
-    cutout_data, err :=  ioutil.ReadFile(directory + "/" + cutout_file_name)
-    if err != nil {
-      log.Fatal(err)
-    }
+    cutout_data, _ :=  ioutil.ReadFile(directory + "/" + cutout_file_name)
     // Create cutout object
     p_cutout := &Cutout{
       FileName: cutout_file_name,
