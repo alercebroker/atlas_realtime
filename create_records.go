@@ -42,7 +42,7 @@ type Candidate struct {
 }
 
 type AtlasRecord struct {
-  SchemaVersion string `avro:"schemavsn"`
+  Schemavsn string `avro:"schemavsn"`
   Candidate *Candidate `avro:"candidate"`
   Candid string `avro:"candid"`
   ObjectID string `avro:"objectID"`
@@ -153,7 +153,7 @@ func createRecord(data []interface{}) *AtlasRecord {
   // Create candidate
   p_candidate := createCandidate(candidate_data)
   // Non candidate fields
-  SchemaVersion := string(data[0].(string))
+  Schemavsn := string(data[0].(string))
   Candidate := p_candidate
   Candid := string(data[24].(string))
   ObjectID := string(data[25].(string))
@@ -162,7 +162,7 @@ func createRecord(data []interface{}) *AtlasRecord {
   CutoutDifference := data[28].(*Cutout)
   // Create atlas record
   atlas_record := AtlasRecord{
-    SchemaVersion: SchemaVersion,
+    Schemavsn: Schemavsn,
     Candidate: Candidate,
     Candid: Candid,
     ObjectID: ObjectID,
