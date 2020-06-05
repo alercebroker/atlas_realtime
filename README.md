@@ -7,17 +7,13 @@ This repository contains the files of the first prototype of ATLAS real-time pip
 
 The ATLAS pipeline consists of several Bash and Golang concatenated scripts. The current version requires a telescope and night in the ATLAS format as input and creates the AVRO files of that telescope and night as a result.
 
-#### Current pipeline
+#### Previous pipeline
 
 ![](doc/images/atlas-pipeline.png)
 
-#### Envisioned pipeline
+#### Current pipeline
 
-The current pipeline is missing a couple of key features. Currently, the AVRO files are generated but there is no producer sending those files to a Kafka cluster. The code for the producer can be found on the `producer.go` file.
-
-An AVRO queue will be required to send the files as they are generated. Also, the way in which `candids.sh` connects to `generate_alerts.go` makes the latter generate many of the files more than once, this MUST be improved.
-
-![](doc/images/atlas-envisioned.png)
+![](doc/images/atlas-current.png)
 
 ***
 ### Scripts
@@ -66,12 +62,11 @@ is inefficient and a remnant of a previous version of the pipeline and should be
 replaced by one that simply receives the arguments and uses them.
 ```
 
-#### times.sh
+The times.sh script grabs the time information from the objects and exposures files and computes the `mjd` of each object as the average mjd of the exposures where that object appears.
+In the current pipeline, the times.sh script was merged into the create_objects.sh script for efficiency reasons.
 
-This script grabs the time information from the objects and exposures files and computes the `mjd` of each object as the average mjd of the exposures where that object appears.
 
 #### candids.sh
-
 This script compiles the information for candidates in a given `tessellation_telnite.objemjd` file and prepares the directories to translate to AVRO format. The candidates' information is stored in `.info` files.
 
 #### config.go
