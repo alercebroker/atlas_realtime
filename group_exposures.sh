@@ -71,6 +71,7 @@ process_data () {
   set -- $data
   local exposure=$1
   local tessellation=$2
+#  local tesse_time=$3
   # Grab value and put it on the map
   local current_array=(${groups[$tessellation]})
   # Check whether the key tessellation is already in the map, if not, add it and then add the exposure
@@ -80,7 +81,8 @@ process_data () {
     groups[$tessellation]="${current_array[@]}"
     # TODO: reject if exposure already in the list
     if [ ${#current_array[@]} -eq 4 ]; then
-#      echo "$tessellation ${groups[$tessellation]}" >> "${telescope}${nite}_img.groups"
+#      echo "$tessellation ${groups[$tessellation]}"  >> "${telescope}${nite}_img.groups"
+#      echo "$tessellation $tesse_time" >> "${telescope}${nite}_img.groups"
       # Call create_objects, next step in the pipeline
       local tolerance="1.9"
       ./create_objects.sh $tessellation "${groups[$tessellation]}" $tolerance &
