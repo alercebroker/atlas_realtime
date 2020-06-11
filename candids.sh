@@ -53,7 +53,7 @@ while read -r candinfo; do
   dmonstastamps="${tessetelnite}/${expnome}_d_stamps.monsta"                                   # name of the file for the monsta commands for difference image
   imonstastamps="${tessetelnite}/${expnome}_i_stamps.monsta"                                   # name of the file for the monsta commands for science image
   #tmonstastamps="${tessetelnite}/${expnome}_t_stamps.monsta"                                   # name of the file for the monsta commands for template image
-  if [[ $xy != "" ]]; then
+  if [[ -n $xy ]]; then
     echo "${xy} ${tessetelnite}/${dstamp}" >> "${dmonstastamps}"                           # command line of the form x y stamp_file_name for a difference stamp
     echo "${xy} ${tessetelnite}/${istamp}" >> "${imonstastamps}"                           # command line of the form x y stamp_file_name for an image stamp
     #echo "${xy} ${tessetelnite}/${tstamp}" >> "${tmonstastamps}"                          # command line of the form x y stamp_file_name for a template stamp
@@ -89,7 +89,7 @@ done
 # clean up the monsta command files
 /bin/rm "${tessetelnite}"/*.monsta
 
-echo $(elapsed) "${tessetelnite}"                         # Report elapsed time
+err $(elapsed) "${tessetelnite}"                         # Report elapsed time
 
 # Create the directory where to put the avro files
 if [ ! -d "avro" ]

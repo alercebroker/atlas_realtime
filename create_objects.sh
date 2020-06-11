@@ -72,7 +72,7 @@ BEGIN { split(timeobs,times," "); \
 
 /bin/rm "${tessetelnite}/${tesse}_candids.tmp" # Delete temporary file
 # here tessetelnite is ready
-echo "Calling candids for ${tesse}"
+#echo "Calling candids for ${tesse}"
 ./candids.sh ${tessetelnite} "${exposures}"
 
-echo $(elapsed) "${tessetelnite}" # Report elapsed time
+err $(elapsed) "${tessetelnite}" # Report elapsed time

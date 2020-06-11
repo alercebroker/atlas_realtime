@@ -15,7 +15,7 @@ func produce(file string) {
 		log.Fatal(err)
 	}
 
-	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "kafka.alerce.online:9092"})
+	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "ec2-3-22-33-46.us-east-2.compute.amazonaws.com:9092"})
 	if err != nil {
 		panic(err)
 	}

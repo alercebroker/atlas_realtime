@@ -53,7 +53,7 @@ validate_input () {
 #######################################
 grab_data () {
   local current_line=$1
-  local exposure_pointing="$( sed "${current_line}q;d" ${log_file} | awk '{print $1, $17}' )"
+  local exposure_pointing="$( sed "${current_line}q;d" ${log_file} | awk '{print $1, $17, $2}' )"
   echo $exposure_pointing
 }
 
@@ -85,11 +85,13 @@ process_data () {
 #      echo "$tessellation $tesse_time" >> "${telescope}${nite}_img.groups"
       # Call create_objects, next step in the pipeline
       local tolerance="1.9"
+      err "Processing tessellation $tessellation "${groups[$tessellation]}" $tolerance"
       ./create_objects.sh $tessellation "${groups[$tessellation]}" $tolerance &
     fi
   fi
 }
 
 # Execute the main functions
+wait_for_file ${log_file} 30
 validate_input
 follow_file grab_data process_data

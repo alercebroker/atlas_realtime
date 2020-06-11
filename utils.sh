@@ -30,11 +30,19 @@ follow_file () {
         #echo "There are unprocessed lines"
         local current_line="$((last_processed_line+1))"
         # Get the exposure and tessellation of the current line
-        local data=$($grab_function "$current_line")
-        $process_function "${data[@]}"
+        read -r -a data <<< $($grab_function "$current_line")
+        $process_function "${data[*]}"
         # Increment number of processed lines
         last_processed_line="$((last_processed_line+1))"
+        mjdtime_day=$(echo "${data[2]}" | awk -F"." '{print $2}')
+        time_read=$(date +%s.%N)
       done
+    else
+      time_now=$(date +%s.%N)
+      elapsed_day=$(awk -v tn="${time_now}" -v tr="${time_read}" -v td="${mjdtime_day}" 'BEGIN {if((tn - tr)/86400 + td/100000 > 0.675 ) print 1; else print 0;}')
+      if [[ $elapsed_day -gt 0 ]]; then
+        exit 0
+      fi
     fi
   done
 }
@@ -70,7 +78,7 @@ wait_for_file () {
   local time=$2
   while [ ! -f $file ]; do
     sleep $time
-    echo "Waiting for the file $file to be created."
+    err "Waiting for the file $file to be created."
   done
 }
 
