@@ -78,7 +78,7 @@ wait_for_file () {
   local time=$2
   while [ ! -f $file ]; do
     sleep $time
-    err "Waiting for the file $file to be created."
+    out "Waiting for the file $file to be created."
   done
 }
 
@@ -124,3 +124,13 @@ elapsed() {
 err() {
   echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
 }
+
+#######################################
+# Function to print out messages along with other status information.
+# Outputs:
+#   Writes time followed by messages
+#######################################
+out() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&1
+}
+ 

@@ -75,4 +75,4 @@ BEGIN { split(timeobs,times," "); \
 #echo "Calling candids for ${tesse}"
 ./candids.sh ${tessetelnite} "${exposures}"
 
-err $(elapsed) "${tessetelnite}" # Report elapsed time
+out $(elapsed) "${tessetelnite}" # Report elapsed time

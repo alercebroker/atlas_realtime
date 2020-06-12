@@ -89,7 +89,7 @@ done
 # clean up the monsta command files
 /bin/rm "${tessetelnite}"/*.monsta
 
-err $(elapsed) "${tessetelnite}"                         # Report elapsed time
+out $(elapsed) "${tessetelnite}"                         # Report elapsed time
 
 # Create the directory where to put the avro files
 if [ ! -d "avro" ]

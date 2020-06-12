@@ -85,7 +85,7 @@ process_data () {
 #      echo "$tessellation $tesse_time" >> "${telescope}${nite}_img.groups"
       # Call create_objects, next step in the pipeline
       local tolerance="1.9"
-      err "Processing tessellation $tessellation "${groups[$tessellation]}" $tolerance"
+      out "Processing tessellation $tessellation "${groups[$tessellation]}" $tolerance"
       ./create_objects.sh $tessellation "${groups[$tessellation]}" $tolerance &
     fi
   fi
