@@ -122,7 +122,7 @@ elapsed() {
 #   Writes time followed by error messages
 #######################################
 err() {
-  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
+  echo "$(date +'%Y-%m-%dT%H:%M:%S') ERROR $*" >&1
 }
 
 #######################################
@@ -131,6 +131,6 @@ err() {
 #   Writes time followed by messages
 #######################################
 out() {
-  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&1
+  echo "$(date +'%Y-%m-%dT%H:%M:%S') INFO $*" >&1
 }
  

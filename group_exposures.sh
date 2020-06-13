@@ -1,18 +1,21 @@
 #!/bin/bash
 #
 # For a given telescope and camera and a given night, group the exposures based on the corresponding tessellation.
-
+cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1
 # Import utilities
 source utils.sh
 
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 telescope+camera_ID night_number"
-    echo "Script needs a telescope + camera id (e.g. 02a) and an ATLAS style night number (e.g. 58XXX)."
-    exit 1
-fi
+#if [ "$#" -ne 2 ]; then
+#    echo "Usage: $0 telescope+camera_ID night_number"
+#    echo "Script needs a telescope + camera id (e.g. 02a) and an ATLAS style night number (e.g. 58XXX)."
+#    exit 1
+#fi
 
 ## Global variables ##
-telescope=$1; nite=$2
+default_telescope="01a"
+current_nite=$(( ( $(date +%s) / 86400 ) + 40587 ))
+telescope=${1:-$default_telescope}
+nite=${2:-$current_nite}
 # Path to log file
 log_path="/atlas/red"
 log_file="${log_path}/${telescope}/${nite}/${telescope}${nite}.log"
