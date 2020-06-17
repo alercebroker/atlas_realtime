@@ -113,6 +113,8 @@ func main() {
     //send avro alert to kafka
 //    produce(output_dir + "/" + candid + ".avro")
   }
+
+  produce(output_dir)
   elapsed := time.Since(start)
   log.Printf("Processing took %s", elapsed)
 }

@@ -37,7 +37,9 @@ awkword=''
 for (( i = 0 ; i < (${#istesse[@]}); i++ )); do # do this for every argument but the tessellation
   exp="${istesse[i]}"
   ddcfile="/atlas/diff/${exp:0:3}/${exp:3:5}/${exp}.ddc" #; echo "${ddcfile}" # second argument is how many characters to take
-  # Wait for the creation of the ddc file
+  
+# Wait for the creation of the ddc file
+  out "Waiting for the file ${ddcfile} to be created."
   wait_for_file ${ddcfile} "2"
   
   # If the file exists and is readable

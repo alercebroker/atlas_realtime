@@ -78,8 +78,8 @@ wait_for_file () {
   local time=$2
   while [ ! -f $file ]; do
     sleep $time
-    out "Waiting for the file $file to be created."
   done
+  out "Waiting for the file $file finished."
 }
 
 #######################################
