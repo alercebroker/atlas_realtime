@@ -39,7 +39,7 @@ func main() {
   // Parse the schema file
   schema, err := avro.ParseSchemaFile(configuration.SchemaFile)
   if err != nil {
-    log.Fatal(err)
+    fmt.Println(err)
   }
   // Open data directory
   output_dir := configuration.OutputDirectory
@@ -47,6 +47,13 @@ func main() {
   start := time.Now()
   // Open data directory
   directory := os.Args[1]
+  
+  res1 := strings.Split(directory, "_")
+  telnight := res1[len(res1)-1]
+  tel := telnight[:3]
+  night := telnight[3:]
+  topic := "atlas_" + night + "_" +tel
+
   // Extension of files that contain the alert information
   info_extension := ".info"
   // Look for all the info files
@@ -77,7 +84,7 @@ func main() {
     alert_data = append(alert_data, cutouts["science"],
       cutouts["difference"])
     // Open file to write to
-    f, err := os.Create(output_dir + "/" + candid + ".avro")
+    f, err := os.Create(directory + "/" + output_dir + "/" + candid + ".avro")
     if err != nil {
       fmt.Println(err)
       return
@@ -110,11 +117,23 @@ func main() {
     // Close the file
     fileWriter.Close()
 
-    //send avro alert to kafka
+    if err := os.Remove(info_file); err != nil {
+        panic(err)
+    }
+//send avro alert to kafka
 //    produce(output_dir + "/" + candid + ".avro")
   }
-
-  produce(output_dir)
+  
+  files, err := filepath.Glob(directory + "/*.fits")
+  if err != nil {
+      panic(err)
+  }
+  for _, f := range files {
+      if err := os.Remove(f); err != nil {
+          panic(err)
+      }
+  }
+  produce(directory + "/" +output_dir, topic)
   elapsed := time.Since(start)
-  log.Printf("Processing took %s", elapsed)
+  fmt.Println("Processing took %s", elapsed)
 }

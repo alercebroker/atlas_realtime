@@ -92,10 +92,10 @@ done
 out $(elapsed) "${tessetelnite}"                         # Report elapsed time
 
 # Create the directory where to put the avro files
-if [ ! -d "avro" ]
+if [ ! -d "${tessetelnite}/avro" ]
 then
-    mkdir avro
+    mkdir "${tessetelnite}/avro"
 fi
-go run config.go create_records.go confluent_producer.go  generate_alerts.go "${tessetelnite}"
-#go run config.go create_records.go sarama_producer.go generate_alerts.go "${tessetelnite}"
+#go run config.go create_records.go confluent_producer.go  generate_alerts.go "${tessetelnite}"
+go run config.go create_records.go sarama_producer.go generate_alerts.go "${tessetelnite}"
 #go run config.go create_records.go segmentio_producer.go generate_alerts.go "${tessetelnite}"
