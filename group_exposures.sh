@@ -75,8 +75,8 @@ process_data () {
   local exposure=$1
   local tessellation=$2
 #  local tesse_time=$3
-  # Ignore preflight and twiflat values
-  if [ "$tessellation" != "preflight" ] && [ "$tessellation" != "twiflat" ]; then
+  # Ignore preflight, twiflat and header values
+  if [ "$tessellation" != "preflight" ] && [ "$tessellation" != "twiflat" ] && [ "$tessellation" != "QC" ] ; then
     local tolerance="1.9"
     out "Processing exposure $exposure"
     ./create_objects.sh $tessellation $exposure $tolerance &
