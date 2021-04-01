@@ -100,7 +100,7 @@ function f(ra,dec) {
     return id;
 }
 $1~"#"{n0=NR}; \
-$1!~"#"{oid = f($1,$2);printf" %s %17s_%04g %s %12.6f\n",$0,expo,NR-n0,oid,mjd}' ${ddcfile}  > "${tessetelnite}/${tessetelnite}.objemjd"
+$1!~"#"&&($12>50||$13>50)&&$15<500&&$14<500&&$19<500&&$10!=5&&$21>=0{oid = f($1,$2);printf" %s %17s_%04g %s %12.6f\n",$0,expo,NR-n0,oid,mjd}' ${ddcfile}  > "${tessetelnite}/${tessetelnite}.objemjd"
 
 # here tessetelnite is ready
 #echo "Calling candids for ${tesse}"

@@ -79,7 +79,7 @@ process_data () {
   if [ "$tessellation" != "preflight" ] && [ "$tessellation" != "twiflat" ] && [ "$tessellation" != "QC" ] ; then
     local tolerance="1.9"
     out "Processing exposure $exposure"
-    ./create_objects.sh $tessellation $exposure $tolerance &
+    ./create_objects.sh $tessellation $exposure $tolerance
   fi
 }
 
