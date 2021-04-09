@@ -96,6 +96,6 @@ if [ ! -d "${tessetelnite}/avro" ]
 then
     mkdir "${tessetelnite}/avro"
 fi
-#go run config.go create_records.go confluent_producer.go  generate_alerts.go "${tessetelnite}"
-go run config.go create_records.go sarama_producer.go generate_alerts.go "${tessetelnite}"
+go run config.go create_records.go confluent_producer.go  generate_alerts.go "${tessetelnite}"
+#go run config.go create_records.go sarama_producer.go generate_alerts.go "${tessetelnite}"
 #go run config.go create_records.go segmentio_producer.go generate_alerts.go "${tessetelnite}"
