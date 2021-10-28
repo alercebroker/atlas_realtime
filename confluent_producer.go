@@ -12,8 +12,7 @@ func produce(directory string, topic string) {
 		panic(err)
         }
 
-        server := "23.23.87.67:9200,35.174.222.219:9200,54.145.72.101:9200"
-        //topic := "test_atlas"
+        server := "server:port"
 
         p, err := kafka.NewProducer(&kafka.ConfigMap{
                         "bootstrap.servers": server,

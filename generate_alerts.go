@@ -16,7 +16,7 @@ import (
 // Global map, stamp type to extension name
 var info_fields = [...]string{"RA", "Dec", "Mag", "Dmag", "X", "Y", "Major",
 "Minor", "Phi", "Det", "ChiN", "Pvr", "Ptr", "Pmv", "Pkn", "Pno", "Pbn",
-"Pcr", "Pxt", "Psc", "Dup", "WPflx", "Dflx", "Candid", "ObjectID", "Mjd"}
+"Pcr", "Pxt", "Psc", "Dup", "WPflx", "Dflx", "Candid", "ObjectID", "Mjd", "Filter"}
 // Global avro queue
 var avro_queue = list.New()
 
@@ -50,9 +50,9 @@ func main() {
   
   res1 := strings.Split(directory, "_")
   telnight := res1[len(res1)-1]
-  tel := telnight[:3]
+  //tel := telnight[:3]
   night := telnight[3:]
-  topic := "atlas_" + night + "_" +tel
+  topic := "atlas_" + night// + "_" +tel
 
   // Extension of files that contain the alert information
   info_extension := ".info"

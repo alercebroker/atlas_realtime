@@ -39,7 +39,7 @@ follow_file () {
       done
     else
       time_now=$(date +%s.%N)
-      elapsed_day=$(awk -v tn="${time_now}" -v tr="${time_read}" -v td="${mjdtime_day}" 'BEGIN {if((tn - tr)/86400 + td/100000 > 0.675 ) print 1; else print 0;}')
+      elapsed_day=$(awk -v tn="${time_now}" -v tr="${time_read}" -v td="${mjdtime_day}" 'BEGIN {if((tn - tr)/86400 + td/10000000 > 0.675 ) print 1; else print 0;}')
       if [[ $elapsed_day -gt 0 ]]; then
         exit 0
       fi
@@ -77,7 +77,11 @@ wait_for_file () {
   local file=$1
   local time=$2
   while [ ! -f $file ]; do
-    sleep $time
+    sleep 1
+    ((time=time - 1))
+    if [[ $time -le 0 ]]; then
+       break
+    fi
   done
   out "Waiting for the file $file finished."
 }

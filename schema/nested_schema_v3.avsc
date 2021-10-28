@@ -37,11 +37,14 @@
           {"name": "Dup", "type": "double", "doc": "Dup"},
           {"name": "WPflx", "type": "double", "doc": "WPflx"},
           {"name": "Dflx", "type": "double", "doc": "Dflx"},
-          {"name": "Mjd", "type": "double", "doc": "Mjd"}
+          {"name": "candid", "type": "string", "doc": "alert identifier"},
+          {"name": "mjd", "type": "double", "doc": "Mjd"},
+          {"name": "filter", "type": "string", "doc": "Filter"}
         ]
       }, "default": null},
     {"name": "candid", "type": "string", "doc": "alert identifier"},
-    {"name": "objectID", "type": "string", "doc": "object identifier"},
+    {"name": "publisher", "type": "string", "doc": "source identifier"},
+    {"name": "objectId", "type": "string", "doc": "object identifier"},
     {"name": "cutoutScience",
       "type": {
         "namespace": "atlas",

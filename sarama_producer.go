@@ -14,7 +14,7 @@ func produce(directory string, topic string) {
         config.Producer.Flush.Frequency = time.Second * 1
 	config.Producer.Flush.Messages = 1000
 	config.Producer.Flush.MaxMessages = 1000
-        broker := "23.23.87.67:9200,35.174.222.219:9200,54.145.72.101:9200"
+        broker := "host:port"
         p, err := sarama.NewAsyncProducer([]string{broker}, config)
 
 	if err != nil {

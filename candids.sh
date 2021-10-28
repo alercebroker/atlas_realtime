@@ -44,8 +44,8 @@ while read -r candinfo; do
   # prepare the stamp commands for monsta. All of them mixed together in this loop to split and activate exposure by exposure in next loop
   # TODO validation "if ($5 < 10544)" to avoid monsta errors when stamp overflows xedge. Remove when monsta solve it.
   image_size=10560
-  stamp_size=33
-  xy=$(echo ${candinfo} | awk -v val="$(($image_size-($stamp_size-1)/2))" '{ if ($5 < val) print $5,$6 }')        # ; echo "${xy}"
+  stamp_size=61
+  xy=$(echo ${candinfo} | awk '{ print $5,$6 }')        # ; echo "${xy}"
   dstamp="${expnomecandlab}_dstamp.fits"    #; echo $dstamp
   istamp="${expnomecandlab}_istamp.fits"    #; echo $istamp
   #tstamp="${expnomecandlab}_tstamp.fits"    #; echo $tstamp
@@ -65,20 +65,20 @@ for (( i = 0 ; i < ${nexpo}; i++ )); do
   nstamps=$(wc -l "${tessetelnite}/${expname[i]}_d_stamps.monsta" | awk '{print $1}')           #   ; echo "${nstamps}"               # nstamps is the same for diff, img, and template
 
   # prepare monsta commands for the difference image of this exposure
-  diffimg="/atlas/diff/${expname[i]:0:3}/${expname[i]:3:5}/${expname[i]}.diff.fz"                # ; echo "${diffimg}"
+  diffimg="/data/atlas-local/diff/${expname[i]:0:3}/${expname[i]:3:5}/${expname[i]}.diff.fz"                # ; echo "${diffimg}"
   validate_file "${diffimg}"
   dmonstastamps="${tessetelnite}/${expname[i]}_d_stamps.monsta"                                  # name of the file for the monsta commands for difference image
   sed -i "1s/^/${nstamps}\n/" ${dmonstastamps}                                                # first line in the file of commands for monsta
   monsta /atlas/src/trunk/red/subarrays.pro ${diffimg} ${dmonstastamps} $stamp_size
   # prepare monsta commands for the science image of this exposure
-  scieimg="/atlas/red/${expname[i]:0:3}/${expname[i]:3:5}/${expname[i]}.fits.fz"             #  ; echo "$scieimg"
+  scieimg="/data/atlas-local/red/${expname[i]:0:3}/${expname[i]:3:5}/${expname[i]}.fits.fz"             #  ; echo "$scieimg"
   validate_file "${scieimg}"
   imonstastamps="${tessetelnite}/${expname[i]}_i_stamps.monsta"                                   # name of the file for the monsta commands for science image
   sed -i "1s/^/${nstamps}\n/" ${imonstastamps}                                                # first line in the file of commands for monsta
   monsta /atlas/src/trunk/red/subarrays.pro ${scieimg} ${imonstastamps} $stamp_size
 
   ### prepare monsta commands for the template image of this exposure
-  ##  tempimg="/atlas/red/${expname[i]:0:3}/${expname[i]:3:5}/${expname[i]}.fits.fz"             #  ; echo "$tempimg"           # same as science image for the time being!!!
+  ##  tempimg="/data/atlas-local/red/${expname[i]:0:3}/${expname[i]:3:5}/${expname[i]}.fits.fz"             #  ; echo "$tempimg"           # same as science image for the time being!!!
   ##  validate_file "${tempimg}"
   ##  tmonstastamps="${tessetelnite}/${expname[i]}_t_stamps.monsta"                                   # name of the file for the monsta commands for template image
   ##  sed -i "1s/^/${nstamps}\n/"  ${tmonstastamps}                                                # first line in the file of commands for monsta

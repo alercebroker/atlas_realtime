@@ -17,10 +17,10 @@ current_nite=$(( ( $(date +%s) / 86400 ) + 40587 ))
 telescope=${1:-$default_telescope}
 nite=${2:-$current_nite}
 # Path to log file
-log_path="/atlas/red"
+log_path="/data/atlas-local/red"
 log_file="${log_path}/${telescope}/${nite}/${telescope}${nite}.log"
 # Associative array to hold the exposure's groups
-#declare -A groups
+declare -A groups
 
 #######################################
 # Validate user input.
@@ -75,11 +75,23 @@ process_data () {
   local exposure=$1
   local tessellation=$2
 #  local tesse_time=$3
-  # Ignore preflight, twiflat and header values
+  # Grab value and put it on the map
+  local current_array=(${groups[$tessellation]})
+  # Check whether the key tessellation is already in the map, if not, add it and then add the exposure
+  # Ignore preflight and twiflat values
   if [ "$tessellation" != "preflight" ] && [ "$tessellation" != "twiflat" ] && [ "$tessellation" != "QC" ] ; then
-    local tolerance="1.9"
-    out "Processing exposure $exposure"
-    ./create_objects.sh $tessellation $exposure $tolerance
+    current_array+=("$exposure")
+    groups[$tessellation]="${current_array[@]}"
+    # TODO: reject if exposure already in the list
+    if [ ${#current_array[@]} -eq 4 ]; then
+#      echo "$tessellation ${groups[$tessellation]}"  >> "${telescope}${nite}_img.groups"
+#      echo "$tessellation $tesse_time" >> "${telescope}${nite}_img.groups"
+      # Call create_objects, next step in the pipeline
+      local tolerance="1.9"
+      out "Processing tessellation $tessellation "${groups[$tessellation]}" $tolerance"
+      ./create_objects.sh $tessellation "${groups[$tessellation]}" $tolerance &
+      break
+    fi
   fi
 }
 

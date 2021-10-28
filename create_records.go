@@ -14,6 +14,7 @@ type Cutout struct {
 }
 
 type Candidate struct {
+  Candid string `avro:"candid"`
   RA float64 `avro:"RA"`
   Dec float64 `avro:"Dec"`
   Mag float64 `avro:"Mag"`
@@ -37,14 +38,16 @@ type Candidate struct {
   Dup float64 `avro:"Dup"`
   WPflx float64 `avro:"WPflx"`
   Dflx float64 `avro:"Dflx"`
-  Mjd float64 `avro:"Mjd"`
+  Mjd float64 `avro:"mjd"`
+  Filter string `avro:"filter"`
 }
 
 type AtlasRecord struct {
   Schemavsn string `avro:"schemavsn"`
+  Publisher string `avro:"publisher"`
   Candidate *Candidate `avro:"candidate"`
   Candid string `avro:"candid"`
-  ObjectID string `avro:"objectID"`
+  ObjectId string `avro:"objectId"`
   CutoutScience *Cutout `avro:"cutoutScience"`
   CutoutDifference *Cutout `avro:"cutoutDifference"`
 }
@@ -99,8 +102,11 @@ func createCandidate(data []interface{}) *Candidate {
   Dup, _ := strconv.ParseFloat(data[20].(string), 64)
   WPflx, _ := strconv.ParseFloat(data[21].(string), 64)
   Dflx, _ := strconv.ParseFloat(data[22].(string), 64)
-  Mjd, _ := strconv.ParseFloat(data[23].(string), 64)
+  Candid, _ := data[23].(string)
+  Mjd, _ := strconv.ParseFloat(data[24].(string), 64)
+  Filter, _ := data[25].(string)
   candidate := Candidate{
+    Candid: Candid,
     RA: RA,
     Dec: Dec,
     Mag: Mag,
@@ -125,6 +131,7 @@ func createCandidate(data []interface{}) *Candidate {
     WPflx: WPflx,
     Dflx: Dflx,
     Mjd: Mjd,
+    Filter: Filter,
   }
   return &candidate
 }
@@ -133,15 +140,15 @@ func createRecord(data []interface{}) *AtlasRecord {
   /*
    * Candidate fields are: RA, Dec, Mag, Dmag, X, Y, Major, Minor,
    * Phi, Det, ChiN, Pvr, Ptr, Pmv, Pkn, Pno, Pbn, Pxt, Pcr, Dup,
-   * WPflx, Dflx, Mjd
+   * WPflx, Dflx, Mjd, Filter
    */
   // Float64 array to store candidate fields
   candidate_data := []interface{}{data[1]} // RA
   // Put the contents of the file in the data of the alert
-  for i, element := range data[2:27] { // does not include 27
+  for i, element := range data[2:28] { // does not include 28
     real_count := i + 2
     // Skip candid and objectID
-    if (real_count == 24 || real_count == 25) {
+    if (real_count == 25) {
     } else {
       candidate_data = append(candidate_data, element)
     }
@@ -150,18 +157,20 @@ func createRecord(data []interface{}) *AtlasRecord {
   p_candidate := createCandidate(candidate_data)
   // Non candidate fields
   Schemavsn := string(data[0].(string))
+  Publisher := "ATLAS"
   Candidate := p_candidate
   Candid := string(data[24].(string))
-  ObjectID := string(data[25].(string))
-  // data[26] is mjd, this value goes in the candidate
-  CutoutScience := data[27].(*Cutout)
-  CutoutDifference := data[28].(*Cutout)
+  ObjectId := string(data[25].(string))
+  // data[26] is mjd,  data[27] is filter, those value goes in the candidate
+  CutoutScience := data[28].(*Cutout)
+  CutoutDifference := data[29].(*Cutout)
   // Create atlas record
   atlas_record := AtlasRecord{
     Schemavsn: Schemavsn,
+    Publisher: Publisher,
     Candidate: Candidate,
     Candid: Candid,
-    ObjectID: ObjectID,
+    ObjectId: ObjectId,
     CutoutScience: CutoutScience,
     CutoutDifference: CutoutDifference,
   }
