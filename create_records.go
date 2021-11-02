@@ -14,32 +14,37 @@ type Cutout struct {
 }
 
 type Candidate struct {
-	Candid string  `avro:"candid"`
-	RA     float64 `avro:"RA"`
-	Dec    float64 `avro:"Dec"`
-	Mag    float64 `avro:"Mag"`
-	Dmag   float64 `avro:"Dmag"`
-	X      float64 `avro:"X"`
-	Y      float64 `avro:"Y"`
-	Major  float64 `avro:"Major"`
-	Minor  float64 `avro:"Minor"`
-	Phi    float64 `avro:"Phi"`
-	Det    float64 `avro:"Det"`
-	ChiN   float64 `avro:"ChiN"`
-	Pvr    float64 `avro:"Pvr"`
-	Ptr    float64 `avro:"Ptr"`
-	Pmv    float64 `avro:"Pmv"`
-	Pkn    float64 `avro:"Pkn"`
-	Pno    float64 `avro:"Pno"`
-	Pbn    float64 `avro:"Pbn"`
-	Pcr    float64 `avro:"Pcr"`
-	Pxt    float64 `avro:"Pxt"`
-	Psc    float64 `avro:"Psc"`
-	Dup    float64 `avro:"Dup"`
-	WPflx  float64 `avro:"WPflx"`
-	Dflx   float64 `avro:"Dflx"`
-	Mjd    float64 `avro:"mjd"`
-	Filter string  `avro:"filter"`
+	Candid    string  `avro:"candid"`
+	RA        float64 `avro:"RA"`
+	Dec       float64 `avro:"Dec"`
+	Mag       float64 `avro:"Mag"`
+	Dmag      float64 `avro:"Dmag"`
+	X         float64 `avro:"X"`
+	Y         float64 `avro:"Y"`
+	Major     float64 `avro:"Major"`
+	Minor     float64 `avro:"Minor"`
+	Phi       float64 `avro:"Phi"`
+	Det       float64 `avro:"Det"`
+	ChiN      float64 `avro:"ChiN"`
+	Pvr       float64 `avro:"Pvr"`
+	Ptr       float64 `avro:"Ptr"`
+	Pmv       float64 `avro:"Pmv"`
+	Pkn       float64 `avro:"Pkn"`
+	Pno       float64 `avro:"Pno"`
+	Pbn       float64 `avro:"Pbn"`
+	Pcr       float64 `avro:"Pcr"`
+	Pxt       float64 `avro:"Pxt"`
+	Psc       float64 `avro:"Psc"`
+	Dup       float64 `avro:"Dup"`
+	WPflx     float64 `avro:"WPflx"`
+	Dflx      float64 `avro:"Dflx"`
+	Mjd       float64 `avro:"mjd"`
+	Filter    string  `avro:"filter"`
+	pid       int64   `avro:"filter"`
+	isdiffpos string  `avro:"filter"`
+	flux      float64 `avro:"filter"`
+	Dflux     float64 `avro:"filter"`
+	rb        float64 `avro:"filter"`
 }
 
 type AtlasRecord struct {
@@ -108,38 +113,48 @@ func createCandidate(data []interface{}) *Candidate {
 	Candid, _ := data[23].(string)
 	Mjd, _ := strconv.ParseFloat(data[24].(string), 64)
 	Filter, _ := data[25].(string)
+	pid := int64(1)
+	isdiffpos := "t"
+	flux := 0.0
+	Dflux := 0.0
+	rb := 0.0
 	candidate := Candidate{
-		Candid: Candid,
-		RA:     RA,
-		Dec:    Dec,
-		Mag:    Mag,
-		Dmag:   Dmag,
-		X:      X,
-		Y:      Y,
-		Major:  Major,
-		Minor:  Minor,
-		Phi:    Phi,
-		Det:    Det,
-		ChiN:   ChiN,
-		Pvr:    Pvr,
-		Ptr:    Ptr,
-		Pmv:    Pmv,
-		Pkn:    Pkn,
-		Pno:    Pno,
-		Pbn:    Pbn,
-		Pcr:    Pcr,
-		Pxt:    Pxt,
-		Psc:    Psc,
-		Dup:    Dup,
-		WPflx:  WPflx,
-		Dflx:   Dflx,
-		Mjd:    Mjd,
-		Filter: Filter,
+		Candid:    Candid,
+		RA:        RA,
+		Dec:       Dec,
+		Mag:       Mag,
+		Dmag:      Dmag,
+		X:         X,
+		Y:         Y,
+		Major:     Major,
+		Minor:     Minor,
+		Phi:       Phi,
+		Det:       Det,
+		ChiN:      ChiN,
+		Pvr:       Pvr,
+		Ptr:       Ptr,
+		Pmv:       Pmv,
+		Pkn:       Pkn,
+		Pno:       Pno,
+		Pbn:       Pbn,
+		Pcr:       Pcr,
+		Pxt:       Pxt,
+		Psc:       Psc,
+		Dup:       Dup,
+		WPflx:     WPflx,
+		Dflx:      Dflx,
+		Mjd:       Mjd,
+		Filter:    Filter,
+		pid:       pid,
+		isdiffpos: isdiffpos,
+		flux:      flux,
+		Dflux:     Dflux,
+		rb:        rb,
 	}
 	return &candidate
 }
 
-func createRecord(data []interface{}) *AtlasRecord {
+func createRecord(data []interface{}, tel string) *AtlasRecord {
 	/*
 	 * Candidate fields are: RA, Dec, Mag, Dmag, X, Y, Major, Minor,
 	 * Phi, Det, ChiN, Pvr, Ptr, Pmv, Pkn, Pno, Pbn, Pxt, Pcr, Dup,
@@ -160,7 +175,7 @@ func createRecord(data []interface{}) *AtlasRecord {
 	p_candidate := createCandidate(candidate_data)
 	// Non candidate fields
 	Schemavsn := string(data[0].(string))
-	Publisher := "ATLAS"
+	Publisher := "ATLAS-" + tel
 	Candidate := p_candidate
 	Candid := string(data[24].(string))
 	ObjectId := string(data[25].(string))

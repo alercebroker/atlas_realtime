@@ -41,11 +41,11 @@ func main() {
 
 	res1 := strings.Split(directory, "_")
 	telnight := res1[len(res1)-1]
-	//tel := telnight[:3]
+	tel := telnight[:3]
 	night, _ := strconv.ParseInt(telnight[3:], 10, 64)
 	//topic := "atlas_" + night // + "_" +tel
 	topic := Lastmodified((night - 40587) * 86400)
-	topico := topic.Format("20060102")
+	topico := "ATLAS_" + topic.Format("20060102")
 
 	// Extension of files that contain the alert information
 	info_extension := ".info"
@@ -89,7 +89,7 @@ func main() {
 		datumWriter := avro.NewSpecificDatumWriter()
 		datumWriter.SetSchema(schema)
 		// Instantiate struct
-		atlas_record := createRecord(alert_data)
+		atlas_record := createRecord(alert_data, tel)
 		// Write the data to the buffer through datumWriter
 		err = datumWriter.Write(atlas_record, encoder)
 		if err != nil {
