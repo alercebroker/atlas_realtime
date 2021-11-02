@@ -12,11 +12,6 @@ import (
 	"gopkg.in/avro.v0"
 )
 
-// Global map, stamp type to extension name
-var info_fields = [...]string{"RA", "Dec", "Mag", "Dmag", "X", "Y", "Major",
-	"Minor", "Phi", "Det", "ChiN", "Pvr", "Ptr", "Pmv", "Pkn", "Pno", "Pbn",
-	"Pcr", "Pxt", "Psc", "Dup", "WPflx", "Dflx", "Candid", "ObjectID", "Mjd", "Filter"}
-
 func Lastmodified(millise int64) time.Time {
 	return time.Unix(0, millise*int64(time.Second))
 }

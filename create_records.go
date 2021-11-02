@@ -40,11 +40,11 @@ type Candidate struct {
 	Dflx      float64 `avro:"Dflx"`
 	Mjd       float64 `avro:"mjd"`
 	Filter    string  `avro:"filter"`
-	pid       int64   `avro:"filter"`
-	isdiffpos string  `avro:"filter"`
-	flux      float64 `avro:"filter"`
-	Dflux     float64 `avro:"filter"`
-	rb        float64 `avro:"filter"`
+	Pid       int64   `avro:"pid"`
+	Isdiffpos string  `avro:"isdiffpos"`
+	Flux      float64 `avro:"flux"`
+	Dflux     float64 `avro:"Dflux"`
+	Rb        float32 `avro:"rb"`
 }
 
 type AtlasRecord struct {
@@ -113,11 +113,11 @@ func createCandidate(data []interface{}) *Candidate {
 	Candid, _ := data[23].(string)
 	Mjd, _ := strconv.ParseFloat(data[24].(string), 64)
 	Filter, _ := data[25].(string)
-	pid := int64(1)
-	isdiffpos := "t"
-	flux := 0.0
-	Dflux := 0.0
-	rb := 0.0
+	Pid := int64(1)
+	Isdiffpos := "t"
+	Flux := float64(2.0)
+	Dflux := float64(2.0)
+	Rb := float32(2.0)
 	candidate := Candidate{
 		Candid:    Candid,
 		RA:        RA,
@@ -145,11 +145,11 @@ func createCandidate(data []interface{}) *Candidate {
 		Dflx:      Dflx,
 		Mjd:       Mjd,
 		Filter:    Filter,
-		pid:       pid,
-		isdiffpos: isdiffpos,
-		flux:      flux,
+		Pid:       Pid,
+		Isdiffpos: Isdiffpos,
+		Flux:      Flux,
 		Dflux:     Dflux,
-		rb:        rb,
+		Rb:        Rb,
 	}
 	return &candidate
 }
