@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 	"strconv"
 )
 
@@ -113,11 +114,20 @@ func createCandidate(data []interface{}) *Candidate {
 	Candid, _ := data[23].(string)
 	Mjd, _ := strconv.ParseFloat(data[24].(string), 64)
 	Filter, _ := data[25].(string)
-	Pid := int64(1)
-	Isdiffpos := "t"
-	Flux := float64(2.0)
-	Dflux := float64(2.0)
-	Rb := float32(2.0)
+	tel := Candid[:2]
+	night := Candid[3:8]
+	exp := Candid[9:13]
+	Pid, _ := strconv.ParseInt(tel+night+exp, 10, 64)
+	Isdiffpos := "f"
+	if Det == 5 {
+		Isdiffpos = "t"
+	}
+	Flux := math.Pow(10, -(math.Abs(Mag)-23.9)/2.5)
+	if Mag < 0 {
+		Flux = -Flux
+	}
+	Dflux := Dmag * Flux
+	Rb := float32(0.0)
 	candidate := Candidate{
 		Candid:    Candid,
 		RA:        RA,
