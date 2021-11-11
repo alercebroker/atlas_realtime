@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"gopkg.in/avro.v0"
 )
 
@@ -39,7 +40,7 @@ func main() {
 	tel := telnight[:3]
 	night, _ := strconv.ParseInt(telnight[3:], 10, 64)
 	//topic := "atlas_" + night // + "_" +tel
-	topic := Lastmodified((night - 40587) * 86400)
+	topic := Lastmodified((night - 40586) * 86400)
 	topico := "ATLAS_" + topic.Format("20060102")
 
 	// Extension of files that contain the alert information

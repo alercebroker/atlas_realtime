@@ -18,33 +18,33 @@ type Candidate struct {
 	Candid    string  `avro:"candid"`
 	RA        float64 `avro:"RA"`
 	Dec       float64 `avro:"Dec"`
-	Mag       float64 `avro:"Mag"`
-	Dmag      float64 `avro:"Dmag"`
-	X         float64 `avro:"X"`
-	Y         float64 `avro:"Y"`
-	Major     float64 `avro:"Major"`
-	Minor     float64 `avro:"Minor"`
+	Mag       float32 `avro:"Mag"`
+	Dmag      float32 `avro:"Dmag"`
+	X         float32 `avro:"X"`
+	Y         float32 `avro:"Y"`
+	Major     float32 `avro:"Major"`
+	Minor     float32 `avro:"Minor"`
 	Phi       float64 `avro:"Phi"`
-	Det       float64 `avro:"Det"`
+	Det       int32   `avro:"Det"`
 	ChiN      float64 `avro:"ChiN"`
-	Pvr       float64 `avro:"Pvr"`
-	Ptr       float64 `avro:"Ptr"`
-	Pmv       float64 `avro:"Pmv"`
-	Pkn       float64 `avro:"Pkn"`
-	Pno       float64 `avro:"Pno"`
-	Pbn       float64 `avro:"Pbn"`
-	Pcr       float64 `avro:"Pcr"`
-	Pxt       float64 `avro:"Pxt"`
-	Psc       float64 `avro:"Psc"`
-	Dup       float64 `avro:"Dup"`
-	WPflx     float64 `avro:"WPflx"`
-	Dflx      float64 `avro:"Dflx"`
+	Pvr       int32   `avro:"Pvr"`
+	Ptr       int32   `avro:"Ptr"`
+	Pmv       int32   `avro:"Pmv"`
+	Pkn       int32   `avro:"Pkn"`
+	Pno       int32   `avro:"Pno"`
+	Pbn       int32   `avro:"Pbn"`
+	Pcr       int32   `avro:"Pcr"`
+	Pxt       int32   `avro:"Pxt"`
+	Psc       int32   `avro:"Psc"`
+	Dup       int32   `avro:"Dup"`
+	WPflx     float32 `avro:"WPflx"`
+	Dflx      float32 `avro:"Dflx"`
 	Mjd       float64 `avro:"mjd"`
 	Filter    string  `avro:"filter"`
 	Pid       int64   `avro:"pid"`
 	Isdiffpos string  `avro:"isdiffpos"`
-	Flux      float64 `avro:"flux"`
-	Dflux     float64 `avro:"Dflux"`
+	Flux      float32 `avro:"flux"`
+	Dflux     float32 `avro:"Dflux"`
 	Rb        float32 `avro:"rb"`
 }
 
@@ -90,27 +90,27 @@ func createCutouts(directory string, candid string) map[string]*Cutout {
 func createCandidate(data []interface{}) *Candidate {
 	RA, _ := strconv.ParseFloat(data[0].(string), 64)
 	Dec, _ := strconv.ParseFloat(data[1].(string), 64)
-	Mag, _ := strconv.ParseFloat(data[2].(string), 64)
-	Dmag, _ := strconv.ParseFloat(data[3].(string), 64)
-	X, _ := strconv.ParseFloat(data[4].(string), 64)
-	Y, _ := strconv.ParseFloat(data[5].(string), 64)
-	Major, _ := strconv.ParseFloat(data[6].(string), 64)
-	Minor, _ := strconv.ParseFloat(data[7].(string), 64)
+	Mag, _ := strconv.ParseFloat(data[2].(string), 32)
+	Dmag, _ := strconv.ParseFloat(data[3].(string), 32)
+	X, _ := strconv.ParseFloat(data[4].(string), 32)
+	Y, _ := strconv.ParseFloat(data[5].(string), 32)
+	Major, _ := strconv.ParseFloat(data[6].(string), 32)
+	Minor, _ := strconv.ParseFloat(data[7].(string), 32)
 	Phi, _ := strconv.ParseFloat(data[8].(string), 64)
-	Det, _ := strconv.ParseFloat(data[9].(string), 64)
+	Det, _ := strconv.ParseInt(data[9].(string), 10, 32)
 	ChiN, _ := strconv.ParseFloat(data[10].(string), 64)
-	Pvr, _ := strconv.ParseFloat(data[11].(string), 64)
-	Ptr, _ := strconv.ParseFloat(data[12].(string), 64)
-	Pmv, _ := strconv.ParseFloat(data[13].(string), 64)
-	Pkn, _ := strconv.ParseFloat(data[14].(string), 64)
-	Pno, _ := strconv.ParseFloat(data[15].(string), 64)
-	Pbn, _ := strconv.ParseFloat(data[16].(string), 64)
-	Pcr, _ := strconv.ParseFloat(data[17].(string), 64)
-	Pxt, _ := strconv.ParseFloat(data[18].(string), 64)
-	Psc, _ := strconv.ParseFloat(data[19].(string), 64)
-	Dup, _ := strconv.ParseFloat(data[20].(string), 64)
-	WPflx, _ := strconv.ParseFloat(data[21].(string), 64)
-	Dflx, _ := strconv.ParseFloat(data[22].(string), 64)
+	Pvr, _ := strconv.ParseInt(data[11].(string), 10, 32)
+	Ptr, _ := strconv.ParseInt(data[12].(string), 10, 32)
+	Pmv, _ := strconv.ParseInt(data[13].(string), 10, 32)
+	Pkn, _ := strconv.ParseInt(data[14].(string), 10, 32)
+	Pno, _ := strconv.ParseInt(data[15].(string), 10, 32)
+	Pbn, _ := strconv.ParseInt(data[16].(string), 10, 32)
+	Pcr, _ := strconv.ParseInt(data[17].(string), 10, 32)
+	Pxt, _ := strconv.ParseInt(data[18].(string), 10, 32)
+	Psc, _ := strconv.ParseInt(data[19].(string), 10, 32)
+	Dup, _ := strconv.ParseInt(data[20].(string), 10, 32)
+	WPflx, _ := strconv.ParseFloat(data[21].(string), 32)
+	Dflx, _ := strconv.ParseFloat(data[22].(string), 32)
 	Candid, _ := data[23].(string)
 	Mjd, _ := strconv.ParseFloat(data[24].(string), 64)
 	Filter, _ := data[25].(string)
@@ -132,33 +132,33 @@ func createCandidate(data []interface{}) *Candidate {
 		Candid:    Candid,
 		RA:        RA,
 		Dec:       Dec,
-		Mag:       Mag,
-		Dmag:      Dmag,
-		X:         X,
-		Y:         Y,
-		Major:     Major,
-		Minor:     Minor,
+		Mag:       float32(Mag),
+		Dmag:      float32(Dmag),
+		X:         float32(X),
+		Y:         float32(Y),
+		Major:     float32(Major),
+		Minor:     float32(Minor),
 		Phi:       Phi,
-		Det:       Det,
+		Det:       int32(Det),
 		ChiN:      ChiN,
-		Pvr:       Pvr,
-		Ptr:       Ptr,
-		Pmv:       Pmv,
-		Pkn:       Pkn,
-		Pno:       Pno,
-		Pbn:       Pbn,
-		Pcr:       Pcr,
-		Pxt:       Pxt,
-		Psc:       Psc,
-		Dup:       Dup,
-		WPflx:     WPflx,
-		Dflx:      Dflx,
+		Pvr:       int32(Pvr),
+		Ptr:       int32(Ptr),
+		Pmv:       int32(Pmv),
+		Pkn:       int32(Pkn),
+		Pno:       int32(Pno),
+		Pbn:       int32(Pbn),
+		Pcr:       int32(Pcr),
+		Pxt:       int32(Pxt),
+		Psc:       int32(Psc),
+		Dup:       int32(Dup),
+		WPflx:     float32(WPflx),
+		Dflx:      float32(Dflx),
 		Mjd:       Mjd,
 		Filter:    Filter,
 		Pid:       Pid,
 		Isdiffpos: Isdiffpos,
-		Flux:      Flux,
-		Dflux:     Dflux,
+		Flux:      float32(Flux),
+		Dflux:     float32(Dflux),
 		Rb:        Rb,
 	}
 	return &candidate

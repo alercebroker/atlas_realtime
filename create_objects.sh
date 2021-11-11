@@ -39,7 +39,7 @@ for (( i = 0 ; i < (${#istesse[@]}); i++ )); do # do this for every argument but
   ddcfile="/data/atlas-local/diff/${exp:0:3}/${exp:3:5}/${exp}.ddc" #; echo "${ddcfile}" # second argument is how many characters to take
   
 # Wait for the creation of the ddc file
-  out "Waiting for the file ${ddcfile} to be created."
+#  out "Waiting for the file ${ddcfile} to be created."
   wait_for_file ${ddcfile} "86400"
   
   # If the file exists and is readable
@@ -47,6 +47,7 @@ for (( i = 0 ; i < (${#istesse[@]}); i++ )); do # do this for every argument but
   awkword=${awkword}" ${ddcfile}" # awkword is a string with the ddc file paths/names separated by spaces
   
   diffimg="/data/atlas-local/diff/${exp:0:3}/${exp:3:5}/${exp}.diff.fz"       #; echo "${diffimg}"
+  wait_for_file ${diffimg} "86400"
   validate_file ${diffimg}  
   
   diffhead=$(/atlas/bin/fitshdr ${diffimg})		# Store the header of the diff images for further use
