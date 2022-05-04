@@ -39,7 +39,7 @@ for (( i = 0 ; i < (${#istesse[@]}); i++ )); do # do this for every argument but
   ddcfile="/data/atlas-local/diff/${exp:0:3}/${exp:3:5}/${exp}.ddc" #; echo "${ddcfile}" # second argument is how many characters to take
   
 # Wait for the creation of the ddc file
-#  out "Waiting for the file ${ddcfile} to be created."
+  out "Waiting for the file ${ddcfile} to be created."
   wait_for_file ${ddcfile} "86400"
   
   # If the file exists and is readable
@@ -127,7 +127,7 @@ BEGIN { split(timeobs,times," "); \
 
 /bin/rm "${tessetelnite}/${tesse}_candids.tmp" # Delete temporary file
 # here tessetelnite is ready
-#echo "Calling candids for ${tesse}"
+out "Calling candids for ${tessetelnite} ${exposures} "
 ./candids.sh ${tessetelnite} "${exposures}"
 
 out $(elapsed) "${tessetelnite}" # Report elapsed time
