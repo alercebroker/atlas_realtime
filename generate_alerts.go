@@ -41,7 +41,7 @@ func main() {
 	night, _ := strconv.ParseInt(telnight[3:], 10, 64)
 	//topic := "atlas_" + night // + "_" +tel
 	topic := Lastmodified((night - 40586) * 86400)
-	topico := "ATLAS_" + topic.Format("20060102")
+	topico := "ATLAS_" + topic.Format("20060102") + "_" + tel
 
 	// Extension of files that contain the alert information
 	info_extension := ".info"

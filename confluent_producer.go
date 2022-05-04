@@ -44,6 +44,7 @@ func produce(directory string, topic string) {
 
 	        p.Produce(&kafka.Message{
 		        TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+                        Key: []byte(file.Name()[:len(file.Name()) - 5]),
 		        Value:          []byte(f),
 	        }, nil)
         }
