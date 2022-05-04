@@ -118,9 +118,9 @@ func createCandidate(data []interface{}) *Candidate {
 	night := Candid[3:8]
 	exp := Candid[9:13]
 	Pid, _ := strconv.ParseInt(tel+night+exp, 10, 64)
-	Isdiffpos := "f"
+	Isdiffpos := "t"
 	if Det == 5 {
-		Isdiffpos = "t"
+		Isdiffpos = "f"
 	}
 	Flux := math.Pow(10, -(math.Abs(Mag)-23.9)/2.5)
 	if Mag < 0 {
