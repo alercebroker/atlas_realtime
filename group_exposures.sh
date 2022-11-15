@@ -12,15 +12,41 @@ source utils.sh
 #fi
 
 ## Global variables ##
+declare -A teles=( ["01a"]="-10" ["02a"]="-10" ["03a"]="+1" ["04a"]="-5")
 default_telescope="01a"
-current_nite=$(( ( $(date +%s) / 86400 ) + 40587 ))
 telescope=${1:-$default_telescope}
+current_nite=$(nn $(mjd) "${teles[$telescope]}")
 nite=${2:-$current_nite}
+
 # Path to log file
-log_path="/atlas/red"
+log_path="/data/atlas-local/red"
 log_file="${log_path}/${telescope}/${nite}/${telescope}${nite}.log"
+
+ATLAS_01_LONG_DEG="-155.5761"
+ATLAS_01_LAT_DEG="19.5361"
+ATLAS_01_ELEV_M="3429.3000"
+
+ATLAS_02_LONG_DEG="-156.2570"
+ATLAS_02_LAT_DEG="20.7075"
+ATLAS_02_ELEV_M="3062.6580"
+
+ATLAS_03_LONG_DEG="20.8107"
+ATLAS_03_LAT_DEG="-32.3802"
+ATLAS_03_ELEV_M="1764.0000"
+
+ATLAS_04_LONG_DEG="-70.7650"
+ATLAS_04_LAT_DEG="-30.4710"
+ATLAS_04_ELEV_M="1609.6000"
+
+ATLAS_SITE_LONG_DEG="ATLAS_${telescope:0:2}_LONG_DEG"
+ATLAS_SITE_LAT_DEG="ATLAS_${telescope:0:2}_LAT_DEG"
+ATLAS_SITE_ELEV_M="ATLAS_${telescope:0:2}_ELEV_M"
+
+eval $(skyangle lng="${!ATLAS_SITE_LONG_DEG}" lat="${!ATLAS_SITE_LAT_DEG}" elev="${!ATLAS_SITE_ELEV_M}" mjd="$nite" az=90 alt=89)
+#srise
+
 # Associative array to hold the exposure's groups
-#declare -A groups
+declare -A groups
 
 #######################################
 # Validate user input.
@@ -33,7 +59,7 @@ log_file="${log_path}/${telescope}/${nite}/${telescope}${nite}.log"
 #   exit 1 if the inputs is invalid
 #######################################
 validate_input () {
-  if [ ${telescope} != "01a" ] && [ ${telescope} != "02a" ]; then
+  if [ ${telescope} != "01a" ] && [ ${telescope} != "02a" ] && [ ${telescope} != "03a" ] && [ ${telescope} != "04a" ]; then
     err "Telescope has to be either 01a or 02a."
     exit 1
   fi
@@ -75,15 +101,28 @@ process_data () {
   local exposure=$1
   local tessellation=$2
 #  local tesse_time=$3
-  # Ignore preflight, twiflat and header values
+  # Grab value and put it on the map
+  local current_array=(${groups[$tessellation]})
+  # Check whether the key tessellation is already in the map, if not, add it and then add the exposure
+  # Ignore preflight and twiflat values
   if [ "$tessellation" != "preflight" ] && [ "$tessellation" != "twiflat" ] && [ "$tessellation" != "QC" ] ; then
-    local tolerance="1.9"
-    out "Processing exposure $exposure"
-    ./create_objects.sh $tessellation $exposure $tolerance
+    current_array+=("$exposure")
+    groups[$tessellation]="${current_array[@]}"
+    # TODO: reject if exposure already in the list
+    if [ ${#current_array[@]} -eq 4 ]; then
+#      echo "$tessellation ${groups[$tessellation]}"  >> "${telescope}${nite}_img.groups"
+#      echo "$tessellation $tesse_time" >> "${telescope}${nite}_img.groups"
+      # Call create_objects, next step in the pipeline
+      local tolerance="1.9"
+      out "Processing tessellation $tessellation "${groups[$tessellation]}" $tolerance"
+      ./create_objects.sh $tessellation "${groups[$tessellation]}" $tolerance &
+    fi
   fi
 }
 
 # Execute the main functions
-wait_for_file ${log_file} 30
+out "wait for file ${log_file}"
+wait_for_file ${log_file} "28800"
 validate_input
-follow_file grab_data process_data
+out "following file until $srise"
+follow_file grab_data process_data "$srise"

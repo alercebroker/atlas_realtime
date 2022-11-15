@@ -6,14 +6,11 @@ import (
 	"io/ioutil"
 )
 
-func produce(directory string, topic string) {
+func produce(directory string, topic string, server string) {
         files, err := ioutil.ReadDir(directory)
         if err != nil {
 		panic(err)
         }
-
-        server := "23.23.87.67:9200,35.174.222.219:9200,54.145.72.101:9200"
-        //topic := "test_atlas"
 
         p, err := kafka.NewProducer(&kafka.ConfigMap{
                         "bootstrap.servers": server,
@@ -45,6 +42,7 @@ func produce(directory string, topic string) {
 
 	        p.Produce(&kafka.Message{
 		        TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+                        Key: []byte(file.Name()[:len(file.Name()) - 5]),
 		        Value:          []byte(f),
 	        }, nil)
         }
