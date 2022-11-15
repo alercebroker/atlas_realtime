@@ -6,13 +6,11 @@ import (
 	"io/ioutil"
 )
 
-func produce(directory string, topic string) {
+func produce(directory string, topic string, server string) {
         files, err := ioutil.ReadDir(directory)
         if err != nil {
 		panic(err)
         }
-
-        server := "server:port"
 
         p, err := kafka.NewProducer(&kafka.ConfigMap{
                         "bootstrap.servers": server,

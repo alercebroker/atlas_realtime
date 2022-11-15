@@ -126,7 +126,8 @@ func main() {
 			panic(err)
 		}
 	}
-	produce(directory+"/"+output_dir, topico)
+	produce(directory+"/"+output_dir, topico, "server:port")
+        os.RemoveAll(directory)
 	elapsed := time.Since(start)
 	fmt.Printf("Processing took %s\n", elapsed)
 }
