@@ -177,7 +177,7 @@ func createCandidate(data []interface{}) *Candidate {
 	return &candidate
 }
 
-func createRecord(client *mongo.Client, data []interface{}, tel string) *AtlasRecord {
+func createRecord(client *mongo.Client, data []interface{}, tel string, db string, col string) *AtlasRecord {
 	/*
 	 * Candidate fields are: RA, Dec, Mag, Dmag, X, Y, Major, Minor,
 	 * Phi, Det, ChiN, Pvr, Ptr, Pmv, Pkn, Pno, Pbn, Pxt, Pcr, Dup,
@@ -201,7 +201,7 @@ func createRecord(client *mongo.Client, data []interface{}, tel string) *AtlasRe
 	Publisher := "ATLAS-" + tel
 	Candidate := p_candidate
 	Candid := string(data[24].(string))
-	ObjectId := getOrCreateId(client, data[25].(string), p_candidate.RA, p_candidate.Dec)
+	ObjectId := getOrCreateId(client, data[25].(string), p_candidate.RA, p_candidate.Dec, db, col)
 
 	// data[26] is mjd,  data[27] is filter, those value goes in the candidate
 	CutoutScience := data[28].(*Cutout)
@@ -219,9 +219,9 @@ func createRecord(client *mongo.Client, data []interface{}, tel string) *AtlasRe
 	return &atlas_record
 }
 
-func getOrCreateId(client *mongo.Client, s string, RA float64, Dec float64) string {
+func getOrCreateId(client *mongo.Client, s string, RA float64, Dec float64, db string, col string) string {
 	// get a handle for the trainers collection in the test database
-	collection := client.Database("staging").Collection("objectid")
+	collection := client.Database(db).Collection(col)
 
 	// Find documents
 	// Pass these options to the Find method

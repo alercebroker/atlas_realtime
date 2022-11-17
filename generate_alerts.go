@@ -114,7 +114,9 @@ func main() {
 		datumWriter := avro.NewSpecificDatumWriter()
 		datumWriter.SetSchema(schema)
 		// Instantiate struct
-		atlas_record := createRecord(client, alert_data, tel)
+		db := configuration.Db
+		col := configuration.Col
+		atlas_record := createRecord(client, alert_data, tel, db, col)
 		// Write the data to the buffer through datumWriter
 		err = datumWriter.Write(atlas_record, encoder)
 		if err != nil {
