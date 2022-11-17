@@ -13,6 +13,8 @@ type Configuration struct {
 	MongodbPort     string
 	MongodbUser     string
 	MongodbPass     string
+	Db              string
+	Col             string
 	KafkaServer1    string
 	KafkaServer2    string
 }
