@@ -1,4 +1,10 @@
 {
   "OutputDirectory": "avro",
-  "SchemaFile": "schema/nested_schema_v3.avsc"
+  "SchemaFile": "schema/nested_schema_v3.avsc",
+  "mongodbHost": "",
+  "mongodbPort": "",
+  "mongodbUser": "",
+  "mongodbPass": "",
+  "kafkaServer1": "",
+  "kafkaServer2": ""
 }

@@ -2,27 +2,56 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"gopkg.in/avro.v0"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
-
-	"gopkg.in/avro.v0"
 )
+
+var client *mongo.Client
+var configuration Configuration
+
+func init() {
+	var err error
+
+	// Load the configuration file
+	configuration, err = loadConfiguration("config/config.json") // replace by relative path
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Set client options
+	clientOptions := options.Client().ApplyURI("mongodb://" + configuration.MongodbUser + ":" + configuration.MongodbPass + "@" + configuration.MongodbHost + ":" + configuration.MongodbPort + "/?authSource=staging")
+
+	// Connect to MongoDB
+	client, err = mongo.Connect(context.TODO(), clientOptions)
+
+	if err != nil {
+		log.Fatal("Invalid DB config:", err)
+	}
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+
+	if err != nil {
+		log.Fatal("DB unreachable:", err)
+	}
+}
 
 func Lastmodified(millise int64) time.Time {
 	return time.Unix(0, millise*int64(time.Second))
 }
 
 func main() {
-	// Load the configuration file
-	configuration, err := loadConfiguration("config/config.json") // replace by relative path
-	if err != nil {
-		fmt.Println(err)
-	}
+
 	// Parse the schema file
 	schema, err := avro.ParseSchemaFile(configuration.SchemaFile)
 	if err != nil {
@@ -85,7 +114,7 @@ func main() {
 		datumWriter := avro.NewSpecificDatumWriter()
 		datumWriter.SetSchema(schema)
 		// Instantiate struct
-		atlas_record := createRecord(alert_data, tel)
+		atlas_record := createRecord(client, alert_data, tel)
 		// Write the data to the buffer through datumWriter
 		err = datumWriter.Write(atlas_record, encoder)
 		if err != nil {
@@ -108,7 +137,10 @@ func main() {
 			return
 		}
 		// Close the file
-		fileWriter.Close()
+		err = fileWriter.Close()
+		if err != nil {
+			panic(err)
+		}
 
 		if err := os.Remove(info_file); err != nil {
 			panic(err)
@@ -126,8 +158,19 @@ func main() {
 			panic(err)
 		}
 	}
-	produce(directory+"/"+output_dir, topico, "server:port")
-        os.RemoveAll(directory)
+	produce(directory+"/"+output_dir, topico, configuration.KafkaServer1)
+	produce(directory+"/"+output_dir, topico, configuration.KafkaServer2)
+	err = os.RemoveAll(directory)
+	if err != nil {
+		log.Fatal(err)
+	}
 	elapsed := time.Since(start)
 	fmt.Printf("Processing took %s\n", elapsed)
+
+	// close a connection
+	err = client.Disconnect(context.TODO())
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }

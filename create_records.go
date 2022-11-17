@@ -1,10 +1,23 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"io/ioutil"
+	"log"
 	"math"
 	"strconv"
+)
+
+const (
+	RADIUS = 1.5
+	// Values from WGS 84
+	a     = 6378137.000000000000 // Semi-major axis of Earth
+	e     = 0.081819190842600    // eccentricity
+	angle = math.Pi / 180
 )
 
 // Structs definitions
@@ -164,7 +177,7 @@ func createCandidate(data []interface{}) *Candidate {
 	return &candidate
 }
 
-func createRecord(data []interface{}, tel string) *AtlasRecord {
+func createRecord(client *mongo.Client, data []interface{}, tel string) *AtlasRecord {
 	/*
 	 * Candidate fields are: RA, Dec, Mag, Dmag, X, Y, Major, Minor,
 	 * Phi, Det, ChiN, Pvr, Ptr, Pmv, Pkn, Pno, Pbn, Pxt, Pcr, Dup,
@@ -188,7 +201,8 @@ func createRecord(data []interface{}, tel string) *AtlasRecord {
 	Publisher := "ATLAS-" + tel
 	Candidate := p_candidate
 	Candid := string(data[24].(string))
-	ObjectId := string(data[25].(string))
+	ObjectId := getOrCreateId(client, data[25].(string), p_candidate.RA, p_candidate.Dec)
+
 	// data[26] is mjd,  data[27] is filter, those value goes in the candidate
 	CutoutScience := data[28].(*Cutout)
 	CutoutDifference := data[29].(*Cutout)
@@ -203,4 +217,109 @@ func createRecord(data []interface{}, tel string) *AtlasRecord {
 		CutoutDifference: CutoutDifference,
 	}
 	return &atlas_record
+}
+
+func getOrCreateId(client *mongo.Client, s string, RA float64, Dec float64) string {
+	// get a handle for the trainers collection in the test database
+	collection := client.Database("staging").Collection("objectid")
+
+	// Find documents
+	// Pass these options to the Find method
+	findOptions := options.Find()
+	findOptions.SetLimit(1)
+	findOptions.SetProjection(bson.D{{"_id", 1}})
+
+	// Passing bson.D{{}} as the filter matches all documents in the collection
+	radius := RADIUS / 3600
+	scaling := wgs_scale(Dec)
+	meterRadius := radius * scaling
+	lon, lat := RA-180.0, Dec
+
+	filter := bson.D{
+		{
+			Key: "loc",
+			Value: bson.D{
+				{
+					Key: "$nearSphere",
+					Value: bson.D{
+						{
+							Key: "$geometry",
+							Value: bson.D{
+								{
+									Key:   "type",
+									Value: "Point",
+								},
+								{
+									Key:   "coordinates",
+									Value: bson.A{lon, lat},
+								},
+							},
+						},
+						{
+							Key:   "$maxDistance",
+							Value: meterRadius,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	cur, err := collection.Find(context.TODO(), filter, findOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Finding multiple documents returns a cursor
+	// Iterating through the cursor allows us to decode documents one at a time
+	if cur.Next(context.TODO()) {
+
+		// create a value into which the single document can be decoded
+		elem := struct {
+			ObjectId string `bson:"_id"`
+		}{}
+		err := cur.Decode(&elem)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return elem.ObjectId
+	}
+
+	asht := bson.D{
+		{
+			"_id", s,
+		},
+		{
+			"loc", bson.D{
+				{
+					"type", "Point",
+				},
+				{
+					"coordinates", bson.A{lon, lat},
+				},
+			},
+		},
+	}
+
+	_, err = collection.InsertOne(context.TODO(), asht)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return s
+}
+
+func wgs_scale(lat float64) float64 {
+	/*
+		Get scaling to convert degrees to meters at a given geodetic latitude (declination)
+		:param lat: geodetic latitude (declination)
+		:return:
+	*/
+	// Compute radius of curvature along meridian (see https://en.wikipedia.org/wiki/Meridian_arc)
+	rm := a * (1 - math.Pow(e, 2)) / math.Pow((1-math.Pow(e, 2)*math.Pow(math.Sin(lat*math.Pi/180), 2)), 1.5)
+
+	// Compute length of arc at this latitude (meters/degree)
+	arc := rm * angle
+	return arc
 }
