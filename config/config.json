@@ -5,6 +5,10 @@
   "mongodbPort": "",
   "mongodbUser": "",
   "mongodbPass": "",
+  "db":          "",
+  "col" :        "",
   "kafkaServer1": "",
-  "kafkaServer2": ""
+  "kafkaServer2": "",
+  "logFile": "",
+  "errFile": ""
 }
