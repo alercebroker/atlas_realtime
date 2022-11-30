@@ -1,10 +1,22 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"io/ioutil"
+	"log"
 	"math"
 	"strconv"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+const (
+	RADIUS = 1.5
+	// Values from WGS 84
+	a     = 6378137.000000000000 // Semi-major axis of Earth
+	e     = 0.081819190842600    // eccentricity
+	angle = math.Pi / 180
 )
 
 // Structs definitions
@@ -59,7 +71,7 @@ type AtlasRecord struct {
 }
 
 // Global map, stamp type to extension name
-var get_extension = map[string]string{
+var getExtension = map[string]string{
 	"science":    "_istamp.fits",
 	"difference": "_dstamp.fits",
 }
@@ -68,21 +80,21 @@ func createCutouts(directory string, candid string) map[string]*Cutout {
 	// Holder for cutouts
 	cutouts := make(map[string]*Cutout)
 	// Fill cutout map
-	for kind := range get_extension {
+	for kind := range getExtension {
 		// Cutout name
-		cutout_file_name := candid + get_extension[kind]
+		cutoutFileName := candid + getExtension[kind]
 		// Read stamp data
-		cutout_data, err := ioutil.ReadFile(directory + "/" + cutout_file_name)
+		cutoutData, err := ioutil.ReadFile(directory + "/" + cutoutFileName)
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
 		}
 		// Create cutout object
-		p_cutout := &Cutout{
-			FileName:  cutout_file_name,
-			StampData: cutout_data,
+		pCutout := &Cutout{
+			FileName:  cutoutFileName,
+			StampData: cutoutData,
 		}
 		// Append cutout to array
-		cutouts[kind] = p_cutout
+		cutouts[kind] = pCutout
 	}
 	return cutouts
 }
@@ -164,36 +176,40 @@ func createCandidate(data []interface{}) *Candidate {
 	return &candidate
 }
 
-func createRecord(data []interface{}, tel string) *AtlasRecord {
+func createRecord(data []interface{}, tel string) (*AtlasRecord, error) {
 	/*
 	 * Candidate fields are: RA, Dec, Mag, Dmag, X, Y, Major, Minor,
 	 * Phi, Det, ChiN, Pvr, Ptr, Pmv, Pkn, Pno, Pbn, Pxt, Pcr, Dup,
 	 * WPflx, Dflx, Mjd, Filter
 	 */
 	// Float64 array to store candidate fields
-	candidate_data := []interface{}{data[1]} // RA
+	candidateData := []interface{}{data[1]} // RA
 	// Put the contents of the file in the data of the alert
 	for i, element := range data[2:28] { // does not include 28
-		real_count := i + 2
+		realCount := i + 2
 		// Skip candid and objectID
-		if real_count == 25 {
+		if realCount == 25 {
 		} else {
-			candidate_data = append(candidate_data, element)
+			candidateData = append(candidateData, element)
 		}
 	}
 	// Create candidate
-	p_candidate := createCandidate(candidate_data)
+	pCandidate := createCandidate(candidateData)
 	// Non candidate fields
-	Schemavsn := string(data[0].(string))
+	Schemavsn := data[0].(string)
 	Publisher := "ATLAS-" + tel
-	Candidate := p_candidate
-	Candid := string(data[24].(string))
-	ObjectId := string(data[25].(string))
+	Candidate := pCandidate
+	Candid := data[24].(string)
+	ObjectId, err := getOrCreateId(data[25].(string), pCandidate.RA, pCandidate.Dec)
+	if err != nil {
+		return nil, err
+	}
+
 	// data[26] is mjd,  data[27] is filter, those value goes in the candidate
 	CutoutScience := data[28].(*Cutout)
 	CutoutDifference := data[29].(*Cutout)
 	// Create atlas record
-	atlas_record := AtlasRecord{
+	atlasRecord := AtlasRecord{
 		Schemavsn:        Schemavsn,
 		Publisher:        Publisher,
 		Candidate:        Candidate,
@@ -202,5 +218,110 @@ func createRecord(data []interface{}, tel string) *AtlasRecord {
 		CutoutScience:    CutoutScience,
 		CutoutDifference: CutoutDifference,
 	}
-	return &atlas_record
+	return &atlasRecord, nil
+}
+
+func getOrCreateId(s string, ra float64, dec float64) (string, error) {
+	// get a handle for the trainers collection in the test database
+	collection := client.Database(configuration.Db).Collection(configuration.Col)
+
+	// Find documents
+	// Pass these options to the Find method
+	findOptions := options.Find()
+	findOptions.SetLimit(1)
+	findOptions.SetProjection(bson.D{{Key: "_id", Value: 1}})
+
+	// Passing bson.D{{}} as the filter matches all documents in the collection
+	radius := RADIUS / 3600
+	scaling := wgsScale(dec)
+	meterRadius := radius * scaling
+	lon, lat := ra-180.0, dec
+
+	filter := bson.D{
+		{
+			Key: "loc",
+			Value: bson.D{
+				{
+					Key: "$nearSphere",
+					Value: bson.D{
+						{
+							Key: "$geometry",
+							Value: bson.D{
+								{
+									Key:   "type",
+									Value: "Point",
+								},
+								{
+									Key:   "coordinates",
+									Value: bson.A{lon, lat},
+								},
+							},
+						},
+						{
+							Key:   "$maxDistance",
+							Value: meterRadius,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	cur, err := collection.Find(context.TODO(), filter, findOptions)
+	if err != nil {
+		return s, err
+	}
+
+	// Finding multiple documents returns a cursor
+	// Iterating through the cursor allows us to decode documents one at a time
+	if cur.Next(context.TODO()) {
+
+		// create a value into which the single document can be decoded
+		elem := struct {
+			ObjectId string `bson:"_id"`
+		}{}
+		err := cur.Decode(&elem)
+		if err != nil {
+			return s, err
+		}
+
+		return elem.ObjectId, nil
+	}
+
+	asht := bson.D{
+		{
+			Key: "_id", Value: s,
+		},
+		{
+			Key: "loc", Value: bson.D{
+				{
+					Key: "type", Value: "Point",
+				},
+				{
+					Key: "coordinates", Value: bson.A{lon, lat},
+				},
+			},
+		},
+	}
+
+	_, err = collection.InsertOne(context.TODO(), asht)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return s, nil
+}
+
+func wgsScale(lat float64) float64 {
+	/*
+		Get scaling to convert degrees to meters at a given geodetic latitude (declination)
+		:param lat: geodetic latitude (declination)
+		:return:
+	*/
+	// Compute radius of curvature along meridian (see https://en.wikipedia.org/wiki/Meridian_arc)
+	rm := a * (1 - math.Pow(e, 2)) / math.Pow(1-math.Pow(e, 2)*math.Pow(math.Sin(lat*math.Pi/180), 2), 1.5)
+
+	// Compute length of arc at this latitude (meters/degree)
+	arc := rm * angle
+	return arc
 }

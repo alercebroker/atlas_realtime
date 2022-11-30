@@ -2,80 +2,131 @@ package main
 
 import (
 	"bytes"
-	"fmt"
+	"context"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/avro.v0"
 )
 
-func Lastmodified(millise int64) time.Time {
-	return time.Unix(0, millise*int64(time.Second))
+var client *mongo.Client
+var configuration *Configuration
+var (
+	InfoLogger  *log.Logger
+	ErrorLogger *log.Logger
+)
+
+func init() {
+	var err error
+
+	// Load the configuration file
+	configuration, err = loadConfiguration("config/config.json") // replace by relative path
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Logs config
+	eFile, err := os.OpenFile(configuration.ErrFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Logs config
+	lFile, err := os.OpenFile(configuration.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	InfoLogger = log.New(lFile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	ErrorLogger = log.New(eFile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+
+	// Database config
+	// Set client options
+	clientOptions := options.Client().ApplyURI("mongodb://" + configuration.MongodbUser + ":" + configuration.MongodbPass + "@" + configuration.MongodbHost + ":" + configuration.MongodbPort + "/?authSource=staging")
+
+	// Connect to MongoDB
+	client, err = mongo.Connect(context.TODO(), clientOptions)
+
+	if err != nil {
+		ErrorLogger.Fatal("Invalid DB config:", err)
+	}
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+
+	if err != nil {
+		ErrorLogger.Fatal("DB unreachable:", err)
+	}
+}
+
+func lastModified(sec int64) time.Time {
+	return time.Unix(0, sec*int64(time.Second))
 }
 
 func main() {
-	// Load the configuration file
-	configuration, err := loadConfiguration("config/config.json") // replace by relative path
-	if err != nil {
-		fmt.Println(err)
-	}
+
 	// Parse the schema file
 	schema, err := avro.ParseSchemaFile(configuration.SchemaFile)
 	if err != nil {
-		fmt.Println(err)
+		ErrorLogger.Println(err)
 	}
 	// Open data directory
-	output_dir := configuration.OutputDirectory
+	outputDir := configuration.OutputDirectory
 	// Get initial time
 	start := time.Now()
 	// Open data directory
 	directory := os.Args[1]
 
 	res1 := strings.Split(directory, "_")
-	telnight := res1[len(res1)-1]
-	tel := telnight[:3]
-	night, _ := strconv.ParseInt(telnight[3:], 10, 64)
-	//topic := "atlas_" + night // + "_" +tel
-	topic := Lastmodified((night - 40586) * 86400)
-	topico := "ATLAS_" + topic.Format("20060102") + "_" + tel
+	telNight := res1[len(res1)-1]
+	tel := telNight[:3]
+	night, _ := strconv.ParseInt(telNight[3:], 10, 64)
+	topic := lastModified((night - 40586) * 86400)
+	topics := "ATLAS_" + topic.Format("20060102") + "_" + tel
 
 	// Extension of files that contain the alert information
-	info_extension := ".info"
+	infoExtension := ".info"
 	// Look for all the info files
-	info_files, err := filepath.Glob(directory + "/*" + info_extension)
+	infoFiles, err := filepath.Glob(directory + "/*" + infoExtension)
 	if err != nil {
-		fmt.Println(err)
+		ErrorLogger.Println(err)
 	}
 	// For each info file
-	for _, info_file := range info_files {
+	for _, infoFile := range infoFiles {
 		// Read the alert information
-		content, _ := ioutil.ReadFile(info_file)
+		content, err := ioutil.ReadFile(infoFile)
+		if err != nil {
+			ErrorLogger.Println(infoFile, err)
+			continue
+		}
 		// Put the contents in an array
 		contents := strings.Fields(string(content))
 		// Begin by adding the schema version
-		schema_version := "0.1"
-		alert_data := []interface{}{schema_version}
+		schemaVersion := "0.1"
+		alertData := []interface{}{schemaVersion}
 		// Put the contents of the file in the data of the alert
 		for _, element := range contents {
-			alert_data = append(alert_data, element)
+			alertData = append(alertData, element)
 		}
 		// Get the file's base name (file name including the extension)
-		base_name := filepath.Base(info_file)
+		baseName := filepath.Base(infoFile)
 		// Leave just the name (candid)
-		candid := strings.TrimSuffix(base_name, info_extension)
+		candid := strings.TrimSuffix(baseName, infoExtension)
 		// Generate cutouts
 		cutouts := createCutouts(directory, candid)
 		// and append them
-		alert_data = append(alert_data, cutouts["science"],
+		alertData = append(alertData, cutouts["science"],
 			cutouts["difference"])
 		// Open file to write to
-		f, err := os.Create(directory + "/" + output_dir + "/" + candid + ".avro")
+		f, err := os.Create(directory + "/" + outputDir + "/" + candid + ".avro")
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
 			return
 		}
 		// Create buffer to store data
@@ -85,49 +136,79 @@ func main() {
 		datumWriter := avro.NewSpecificDatumWriter()
 		datumWriter.SetSchema(schema)
 		// Instantiate struct
-		atlas_record := createRecord(alert_data, tel)
-		// Write the data to the buffer through datumWriter
-		err = datumWriter.Write(atlas_record, encoder)
+		atlasRecord, err := createRecord(alertData, tel)
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
+			continue
+		}
+		// Write the data to the buffer through datumWriter
+		err = datumWriter.Write(atlasRecord, encoder)
+		if err != nil {
+			ErrorLogger.Println(err)
+			continue
 		}
 		// Create a fileWriter
 		fileWriter, err := avro.NewDataFileWriter(f, schema, datumWriter)
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
+			continue
 		}
 		// fileWriter needs an argument
-		err = fileWriter.Write(atlas_record)
+		err = fileWriter.Write(atlasRecord)
 		if err != nil {
-			fmt.Println(err)
+			ErrorLogger.Println(err)
+			continue
 		}
 
 		err = fileWriter.Flush()
 		if err != nil {
-			fmt.Println(err)
-			return
+			ErrorLogger.Println(err)
+			continue
 		}
 		// Close the file
-		fileWriter.Close()
-
-		if err := os.Remove(info_file); err != nil {
-			panic(err)
+		err = fileWriter.Close()
+		if err != nil {
+			ErrorLogger.Println(err)
+			continue
 		}
-		//send avro alert to kafka
-		//    produce(output_dir + "/" + candid + ".avro")
+
+		if err := os.Remove(infoFile); err != nil {
+			ErrorLogger.Println(err)
+			continue
+		}
+		// send avro alert to kafka
+		//    produce(outputDir + "/" + candid + ".avro")
 	}
 
 	files, err := filepath.Glob(directory + "/*.fits")
 	if err != nil {
-		panic(err)
+		ErrorLogger.Println(err)
 	}
 	for _, f := range files {
 		if err := os.Remove(f); err != nil {
-			panic(err)
+			ErrorLogger.Println(err)
 		}
 	}
-	produce(directory+"/"+output_dir, topico, "server:port")
-        os.RemoveAll(directory)
+	err = produce(directory+"/"+outputDir, topics, configuration.KafkaServer1)
+	if err != nil {
+		ErrorLogger.Println(err)
+	}
+	err = produce(directory+"/"+outputDir, topics, configuration.KafkaServer2)
+	if err != nil {
+		ErrorLogger.Println(err)
+	}
+
+	err = os.RemoveAll(directory)
+	if err != nil {
+		ErrorLogger.Println(err)
+	}
+
+	// close a connection
+	err = client.Disconnect(context.TODO())
+
+	if err != nil {
+		ErrorLogger.Println(err)
+	}
 	elapsed := time.Since(start)
-	fmt.Printf("Processing took %s\n", elapsed)
+	InfoLogger.Printf("Processing took %s %s\n", elapsed, topics)
 }
