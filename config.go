@@ -2,13 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 )
 
 // Configuration struct
 type Configuration struct {
 	OutputDirectory string
-	SchemaFile      string
 	MongodbHost     string
 	MongodbPort     string
 	MongodbUser     string
@@ -26,7 +25,7 @@ type Configuration struct {
 * a Configuration instance that contains the values of the file.
  */
 func loadConfiguration(filename string) (*Configuration, error) {
-	bytes, err := ioutil.ReadFile(filename)
+	bytes, err := os.ReadFile(filename)
 	if err != nil {
 		return &Configuration{}, err
 	}

@@ -1,6 +1,5 @@
 {
   "OutputDirectory": "avro",
-  "SchemaFile": "schema/nested_schema_v3.avsc",
   "mongodbHost": "",
   "mongodbPort": "",
   "mongodbUser": "",
