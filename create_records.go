@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"math"
-	"os"
 	"strconv"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -86,7 +86,7 @@ func createCutouts(directory string, candid string) map[string]*Cutout {
 		// Cutout name
 		cutoutFileName := candid + getExtension[kind]
 		// Read stamp data
-		cutoutData, err := os.ReadFile(directory + "/" + cutoutFileName)
+		cutoutData, err := ioutil.ReadFile(directory + "/" + cutoutFileName)
 		if err != nil {
 			ErrorLogger.Println(err)
 			break

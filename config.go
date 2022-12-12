@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"os"
+	"io/ioutil"
 )
 
 // Configuration struct
@@ -25,7 +25,7 @@ type Configuration struct {
 * a Configuration instance that contains the values of the file.
  */
 func loadConfiguration(filename string) (*Configuration, error) {
-	bytes, err := os.ReadFile(filename)
+	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return &Configuration{}, err
 	}

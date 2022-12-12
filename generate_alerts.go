@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -9,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hamba/avro/v2"
-	"github.com/hamba/avro/v2/ocf"
+	"github.com/hamba/avro"
+	"github.com/hamba/avro/ocf"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -142,7 +143,7 @@ func main() {
 
 func generateAlert(baseName string, directory string, schemaVersion string, tel string) (*AtlasRecord, error) {
 	// Read the alert information
-	content, err := os.ReadFile(directory + "/" + baseName + ".info")
+	content, err := ioutil.ReadFile(directory + "/" + baseName + ".info")
 	if err != nil {
 		return nil, err
 	}
