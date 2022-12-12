@@ -73,8 +73,17 @@ func main() {
 
 	// Load schemas in a given folder
 	schemaCandidate, err := avro.ParseFiles("schema/candidate.avsc")
+	if err != nil {
+		ErrorLogger.Fatal("Invalid avro schema:", err)
+	}
 	schemaCutout, err := avro.ParseFiles("schema/cutout.avsc")
+	if err != nil {
+		ErrorLogger.Fatal("Invalid avro schema:", err)
+	}
 	schemaAlert, err := avro.ParseFiles("schema/alert.avsc")
+	if err != nil {
+		ErrorLogger.Fatal("Invalid avro schema:", err)
+	}
 	alertCandidate := strings.Replace(schemaAlert.String(), "\"atlas.candidate\"", schemaCandidate.String(), 1)
 	schema := strings.Replace(alertCandidate, "\"atlas.cutout\"", schemaCutout.String(), 1)
 
@@ -109,6 +118,10 @@ func main() {
 		baseName := filepath.Base(infoFile)
 		name := baseName[:len(baseName)-len(filepath.Ext(baseName))]
 		atlasRecord, err := generateAlert(name, directory, schemaVersion, tel)
+		if err != nil {
+			ErrorLogger.Println(err)
+			continue
+		}
 
 		err = saveAvroFile(directory+"/"+outputDir+"/"+atlasRecord.Candid+".avro", schema, atlasRecord)
 		if err != nil {
@@ -211,14 +224,12 @@ func loadAvroFile(infoFile string) (*AtlasRecord, error) {
 	}
 
 	record := new(AtlasRecord)
-	for dec.HasNext() {
+	if dec.HasNext() {
 		err = dec.Decode(&record)
 		if err != nil {
 			ErrorLogger.Println(err)
 			return nil, err
 		}
-
-		break
 	}
 	return record, nil
 }

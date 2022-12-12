@@ -39,11 +39,15 @@ func produce(directory string, topic string, server string) error {
 			continue
 		}
 
-		p.Produce(&kafka.Message{
+		err = p.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 			Key:            []byte(file.Name()[:len(file.Name())-5]),
 			Value:          []byte(f),
 		}, nil)
+		if err != nil {
+			ErrorLogger.Println(file.Name(), err)
+			continue
+		}
 	}
 	p.Flush(1500 * 1000)
 	return err
