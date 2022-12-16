@@ -14,8 +14,7 @@ type Configuration struct {
 	MongodbPass     string
 	Db              string
 	Col             string
-	KafkaServer1    string
-	KafkaServer2    string
+	KafkaServer     string
 	LogFile         string
 	ErrFile         string
 }
