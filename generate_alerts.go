@@ -48,7 +48,7 @@ func init() {
 
 	// Database config
 	// Set client options
-	clientOptions := options.Client().ApplyURI("mongodb://" + configuration.MongodbUser + ":" + configuration.MongodbPass + "@" + configuration.MongodbHost + ":" + configuration.MongodbPort + "/?authSource=staging")
+	clientOptions := options.Client().ApplyURI("mongodb://" + configuration.MongodbUser + ":" + configuration.MongodbPass + "@" + configuration.MongodbHost + ":" + configuration.MongodbPort + "/?authSource=admin")
 
 	// Connect to MongoDB
 	client, err = mongo.Connect(context.TODO(), clientOptions)
