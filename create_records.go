@@ -67,13 +67,15 @@ type AtlasRecord struct {
 	Candid           string     `avro:"candid"`
 	ObjectId         string     `avro:"objectId"`
 	CutoutScience    *Cutout    `avro:"cutoutScience"`
+	CutoutTemplate   *Cutout    `avro:"cutoutTemplate"`
 	CutoutDifference *Cutout    `avro:"cutoutDifference"`
 }
 
 // Global map, stamp type to extension name
 var getExtension = map[string]string{
-	"science":    "_istamp.fits",
-	"difference": "_dstamp.fits",
+	"science":    "_istamp.fits.gz",
+	"difference": "_dstamp.fits.gz",
+	"template":   "_rstamp.fits.gz",
 }
 
 func createCutouts(directory string, candid string) map[string]*Cutout {
@@ -87,6 +89,7 @@ func createCutouts(directory string, candid string) map[string]*Cutout {
 		cutoutData, err := ioutil.ReadFile(directory + "/" + cutoutFileName)
 		if err != nil {
 			ErrorLogger.Println(err)
+			break
 		}
 		// Create cutout object
 		pCutout := &Cutout{
@@ -140,7 +143,7 @@ func createCandidate(data []interface{}) *Candidate {
 	}
 	Dflux := Dmag * Flux
 	Rb := float32(0.0)
-	candidate := Candidate{
+	candidate := &Candidate{
 		Candid:    Candid,
 		RA:        RA,
 		Dec:       Dec,
@@ -173,22 +176,22 @@ func createCandidate(data []interface{}) *Candidate {
 		Dflux:     float32(Dflux),
 		Rb:        Rb,
 	}
-	return &candidate
+	return candidate
 }
 
-func createRecord(data []interface{}, tel string) (*AtlasRecord, error) {
+func createRecord(data []interface{}) (*AtlasRecord, error) {
 	/*
 	 * Candidate fields are: RA, Dec, Mag, Dmag, X, Y, Major, Minor,
 	 * Phi, Det, ChiN, Pvr, Ptr, Pmv, Pkn, Pno, Pbn, Pxt, Pcr, Dup,
 	 * WPflx, Dflx, Mjd, Filter
 	 */
 	// Float64 array to store candidate fields
-	candidateData := []interface{}{data[1]} // RA
+	candidateData := []interface{}{data[2]} // RA
 	// Put the contents of the file in the data of the alert
-	for i, element := range data[2:28] { // does not include 28
-		realCount := i + 2
+	for i, element := range data[3:29] { // does not include 28
+		realCount := i + 3
 		// Skip candid and objectID
-		if realCount == 25 {
+		if realCount == 26 {
 		} else {
 			candidateData = append(candidateData, element)
 		}
@@ -197,28 +200,31 @@ func createRecord(data []interface{}, tel string) (*AtlasRecord, error) {
 	pCandidate := createCandidate(candidateData)
 	// Non candidate fields
 	Schemavsn := data[0].(string)
+	tel := data[1].(string)
 	Publisher := "ATLAS-" + tel
 	Candidate := pCandidate
-	Candid := data[24].(string)
+	Candid := data[25].(string)
 	ObjectId, err := getOrCreateId(data[25].(string), pCandidate.RA, pCandidate.Dec)
 	if err != nil {
 		return nil, err
 	}
 
 	// data[26] is mjd,  data[27] is filter, those value goes in the candidate
-	CutoutScience := data[28].(*Cutout)
-	CutoutDifference := data[29].(*Cutout)
+	CutoutScience := data[29].(*Cutout)
+	CutoutDifference := data[30].(*Cutout)
+	CutoutTemplate := data[31].(*Cutout)
 	// Create atlas record
-	atlasRecord := AtlasRecord{
+	atlasRecord := &AtlasRecord{
 		Schemavsn:        Schemavsn,
 		Publisher:        Publisher,
 		Candidate:        Candidate,
 		Candid:           Candid,
 		ObjectId:         ObjectId,
 		CutoutScience:    CutoutScience,
+		CutoutTemplate:   CutoutTemplate,
 		CutoutDifference: CutoutDifference,
 	}
-	return &atlasRecord, nil
+	return atlasRecord, nil
 }
 
 func getOrCreateId(s string, ra float64, dec float64) (string, error) {

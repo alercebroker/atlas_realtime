@@ -8,15 +8,13 @@ import (
 // Configuration struct
 type Configuration struct {
 	OutputDirectory string
-	SchemaFile      string
 	MongodbHost     string
 	MongodbPort     string
 	MongodbUser     string
 	MongodbPass     string
 	Db              string
 	Col             string
-	KafkaServer1    string
-	KafkaServer2    string
+	KafkaServer     string
 	LogFile         string
 	ErrFile         string
 }

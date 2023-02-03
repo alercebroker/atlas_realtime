@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"io/ioutil"
 	"log"
@@ -11,9 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hamba/avro"
+	"github.com/hamba/avro/ocf"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"gopkg.in/avro.v0"
 )
 
 var client *mongo.Client
@@ -48,7 +48,7 @@ func init() {
 
 	// Database config
 	// Set client options
-	clientOptions := options.Client().ApplyURI("mongodb://" + configuration.MongodbUser + ":" + configuration.MongodbPass + "@" + configuration.MongodbHost + ":" + configuration.MongodbPort + "/?authSource=staging")
+	clientOptions := options.Client().ApplyURI("mongodb://" + configuration.MongodbUser + ":" + configuration.MongodbPass + "@" + configuration.MongodbHost + ":" + configuration.MongodbPort + "/?authSource=admin")
 
 	// Connect to MongoDB
 	client, err = mongo.Connect(context.TODO(), clientOptions)
@@ -71,11 +71,22 @@ func lastModified(sec int64) time.Time {
 
 func main() {
 
-	// Parse the schema file
-	schema, err := avro.ParseSchemaFile(configuration.SchemaFile)
+	// Load schemas in a given folder
+	schemaCandidate, err := avro.ParseFiles("schema/candidate.avsc")
 	if err != nil {
-		ErrorLogger.Println(err)
+		ErrorLogger.Fatal("Invalid avro schema:", err)
 	}
+	schemaCutout, err := avro.ParseFiles("schema/cutout.avsc")
+	if err != nil {
+		ErrorLogger.Fatal("Invalid avro schema:", err)
+	}
+	schemaAlert, err := avro.ParseFiles("schema/alert.avsc")
+	if err != nil {
+		ErrorLogger.Fatal("Invalid avro schema:", err)
+	}
+	alertCandidate := strings.Replace(schemaAlert.String(), "\"atlas.candidate\"", schemaCandidate.String(), 1)
+	schema := strings.Replace(alertCandidate, "\"atlas.cutout\"", schemaCutout.String(), 1)
+
 	// Open data directory
 	outputDir := configuration.OutputDirectory
 	// Get initial time
@@ -83,6 +94,7 @@ func main() {
 	// Open data directory
 	directory := os.Args[1]
 
+	// Topic name
 	res1 := strings.Split(directory, "_")
 	telNight := res1[len(res1)-1]
 	tel := telNight[:3]
@@ -97,103 +109,28 @@ func main() {
 	if err != nil {
 		ErrorLogger.Println(err)
 	}
+
+	schemaVersion := "0.1" // schema.Prop("version")
+
 	// For each info file
 	for _, infoFile := range infoFiles {
-		// Read the alert information
-		content, err := ioutil.ReadFile(infoFile)
-		if err != nil {
-			ErrorLogger.Println(infoFile, err)
-			continue
-		}
-		// Put the contents in an array
-		contents := strings.Fields(string(content))
-		// Begin by adding the schema version
-		schemaVersion := "0.1"
-		alertData := []interface{}{schemaVersion}
-		// Put the contents of the file in the data of the alert
-		for _, element := range contents {
-			alertData = append(alertData, element)
-		}
-		// Get the file's base name (file name including the extension)
+
 		baseName := filepath.Base(infoFile)
-		// Leave just the name (candid)
-		candid := strings.TrimSuffix(baseName, infoExtension)
-		// Generate cutouts
-		cutouts := createCutouts(directory, candid)
-		// and append them
-		alertData = append(alertData, cutouts["science"],
-			cutouts["difference"])
-		// Open file to write to
-		f, err := os.Create(directory + "/" + outputDir + "/" + candid + ".avro")
-		if err != nil {
-			ErrorLogger.Println(err)
-			return
-		}
-		// Create buffer to store data
-		var buf bytes.Buffer
-		encoder := avro.NewBinaryEncoder(&buf)
-		// Create DatumWriter and set schema
-		datumWriter := avro.NewSpecificDatumWriter()
-		datumWriter.SetSchema(schema)
-		// Instantiate struct
-		atlasRecord, err := createRecord(alertData, tel)
-		if err != nil {
-			ErrorLogger.Println(err)
-			continue
-		}
-		// Write the data to the buffer through datumWriter
-		err = datumWriter.Write(atlasRecord, encoder)
-		if err != nil {
-			ErrorLogger.Println(err)
-			continue
-		}
-		// Create a fileWriter
-		fileWriter, err := avro.NewDataFileWriter(f, schema, datumWriter)
-		if err != nil {
-			ErrorLogger.Println(err)
-			continue
-		}
-		// fileWriter needs an argument
-		err = fileWriter.Write(atlasRecord)
+		name := baseName[:len(baseName)-len(filepath.Ext(baseName))]
+		atlasRecord, err := generateAlert(name, directory, schemaVersion, tel)
 		if err != nil {
 			ErrorLogger.Println(err)
 			continue
 		}
 
-		err = fileWriter.Flush()
+		err = saveAvroFile(directory+"/"+outputDir+"/"+atlasRecord.Candid+".avro", schema, atlasRecord)
 		if err != nil {
 			ErrorLogger.Println(err)
-			continue
-		}
-		// Close the file
-		err = fileWriter.Close()
-		if err != nil {
-			ErrorLogger.Println(err)
-			continue
 		}
 
-		if err := os.Remove(infoFile); err != nil {
-			ErrorLogger.Println(err)
-			continue
-		}
-		// send avro alert to kafka
-		//    produce(outputDir + "/" + candid + ".avro")
 	}
 
-	files, err := filepath.Glob(directory + "/*.fits")
-	if err != nil {
-		ErrorLogger.Println(err)
-	}
-	for _, f := range files {
-		if err := os.Remove(f); err != nil {
-			ErrorLogger.Println(err)
-		}
-	}
-	err = produce(directory+"/"+outputDir, topics, configuration.KafkaServer1)
-	if err != nil {
-		ErrorLogger.Println(err)
-	}
-	err = produce(directory+"/"+outputDir, topics, configuration.KafkaServer2)
+	err = produce(directory+"/"+outputDir, topics, configuration.KafkaServer)
 	if err != nil {
 		ErrorLogger.Println(err)
 	}
@@ -211,4 +148,84 @@ func main() {
 	}
 	elapsed := time.Since(start)
 	InfoLogger.Printf("Processing took %s %s\n", elapsed, topics)
+}
+
+func generateAlert(baseName string, directory string, schemaVersion string, tel string) (*AtlasRecord, error) {
+	// Read the alert information
+	content, err := ioutil.ReadFile(directory + "/" + baseName + ".info")
+	if err != nil {
+		return nil, err
+	}
+
+	// Put the contents in an array
+	contents := strings.Fields(string(content))
+
+	alertData := []interface{}{schemaVersion, tel}
+	// Put the contents of the file in the data of the alert
+	for _, element := range contents {
+		alertData = append(alertData, element)
+	}
+	// Generate cutouts
+	cutouts := createCutouts(directory, baseName)
+	// and append them
+	alertData = append(alertData, cutouts["science"], cutouts["difference"], cutouts["template"])
+
+	// Instantiate struct
+	atlasRecord, err := createRecord(alertData)
+	if err != nil {
+		ErrorLogger.Println(err)
+		return nil, err
+	}
+	return atlasRecord, nil
+}
+
+func saveAvroFile(path string, schema string, atlasRecord *AtlasRecord) error {
+	// Open file to write to
+	f, err := os.Create(path)
+	if err != nil {
+		ErrorLogger.Println(err)
+		return err
+	}
+
+	enc, err := ocf.NewEncoder(schema, f)
+	if err != nil {
+		ErrorLogger.Println(err)
+		return err
+	}
+	err = enc.Encode(atlasRecord)
+	if err != nil {
+		ErrorLogger.Println(err)
+		return err
+	}
+
+	if err := enc.Flush(); err != nil {
+		ErrorLogger.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func loadAvroFile(infoFile string) (*AtlasRecord, error) {
+	f, err := os.Open(infoFile)
+	if err != nil {
+		ErrorLogger.Println(err)
+		return nil, err
+	}
+
+	dec, err := ocf.NewDecoder(f)
+	if err != nil {
+		ErrorLogger.Println(err)
+		return nil, err
+	}
+
+	record := new(AtlasRecord)
+	if dec.HasNext() {
+		err = dec.Decode(&record)
+		if err != nil {
+			ErrorLogger.Println(err)
+			return nil, err
+		}
+	}
+	return record, nil
 }

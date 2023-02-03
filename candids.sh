@@ -87,6 +87,9 @@ for (( i = 0 ; i < ${nexpo}; i++ )); do
 done
 
 # clean up the monsta command files
+/bin/gzip "${tessetelnite}"/*.fits
+
+# clean up the monsta command files
 /bin/rm "${tessetelnite}"/*.monsta
 
 out $(elapsed) "${tessetelnite}"                         # Report elapsed time
