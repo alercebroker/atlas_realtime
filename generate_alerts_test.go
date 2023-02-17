@@ -19,6 +19,7 @@ func TestAvroDeserialization(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	assert.NoError(t, err)
 
 	if !reflect.DeepEqual(obj, gen) {
 		t.Errorf("Expected %v, actual %v\n", obj, gen)
