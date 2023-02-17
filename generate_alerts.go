@@ -129,7 +129,11 @@ func main() {
 		}
 
 		previousId, err := getOrCreateId(atlasRecord.ObjectId, atlasRecord.Candidate.RA, atlasRecord.Candidate.Dec)
-		atlasRecord.ObjectId = previousId
+		if err != nil {
+			ErrorLogger.Println(err)
+		} else {
+			atlasRecord.ObjectId = previousId
+		}
 
 		err = saveAvroFile(directory+"/"+outputDir+"/"+atlasRecord.Candid+".avro", schema, atlasRecord)
 		if err != nil {
