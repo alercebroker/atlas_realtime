@@ -2,7 +2,7 @@ name: Lint Go Code
 
 on:
   push:
-    branches: [ "hamba-avro"]
+    branches: [ "refactorization-db"]
   pull_request:
     branches: [ "master" ]
 
