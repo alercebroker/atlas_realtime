@@ -84,10 +84,9 @@ for (( i = 0 ; i < ${nexpo}; i++ )); do
   ##  sed -i "1s/^/${nstamps}\n/"  ${tmonstastamps}                                                # first line in the file of commands for monsta
   ##  monsta /atlas/src/trunk/red/subarrays.pro ${tempimg} ${tmonstastamps} $stamp_size
 
+  # compress stamps
+  /bin/gzip "${tessetelnite}"/*.fits
 done
-
-# clean up the monsta command files
-/bin/gzip "${tessetelnite}"/*.fits
 
 # clean up the monsta command files
 /bin/rm "${tessetelnite}"/*.monsta
@@ -100,5 +99,3 @@ then
     mkdir "${tessetelnite}/avro"
 fi
 go run config.go create_records.go confluent_producer.go  generate_alerts.go "${tessetelnite}"
-#go run config.go create_records.go sarama_producer.go generate_alerts.go "${tessetelnite}"
-#go run config.go create_records.go segmentio_producer.go generate_alerts.go "${tessetelnite}"
