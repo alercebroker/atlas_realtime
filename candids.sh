@@ -70,12 +70,15 @@ for (( i = 0 ; i < ${nexpo}; i++ )); do
   dmonstastamps="${tessetelnite}/${expname[i]}_d_stamps.monsta"                                  # name of the file for the monsta commands for difference image
   sed -i "1s/^/${nstamps}\n/" ${dmonstastamps}                                                # first line in the file of commands for monsta
   monsta /atlas/src/trunk/red/subarrays.pro ${diffimg} ${dmonstastamps} $stamp_size
+  find "${tessetelnite}" -name *.fits -print0 | parallel  --will-cite -0 gzip
+  
   # prepare monsta commands for the science image of this exposure
   scieimg="/data/atlas-local/red/${expname[i]:0:3}/${expname[i]:3:5}/${expname[i]}.fits.fz"             #  ; echo "$scieimg"
   validate_file "${scieimg}"
   imonstastamps="${tessetelnite}/${expname[i]}_i_stamps.monsta"                                   # name of the file for the monsta commands for science image
   sed -i "1s/^/${nstamps}\n/" ${imonstastamps}                                                # first line in the file of commands for monsta
   monsta /atlas/src/trunk/red/subarrays.pro ${scieimg} ${imonstastamps} $stamp_size
+  find "${tessetelnite}" -name *.fits -print0 | parallel  --will-cite -0 gzip
 
   ### prepare monsta commands for the template image of this exposure
   ##  tempimg="/data/atlas-local/red/${expname[i]:0:3}/${expname[i]:3:5}/${expname[i]}.fits.fz"             #  ; echo "$tempimg"           # same as science image for the time being!!!
@@ -83,9 +86,7 @@ for (( i = 0 ; i < ${nexpo}; i++ )); do
   ##  tmonstastamps="${tessetelnite}/${expname[i]}_t_stamps.monsta"                                   # name of the file for the monsta commands for template image
   ##  sed -i "1s/^/${nstamps}\n/"  ${tmonstastamps}                                                # first line in the file of commands for monsta
   ##  monsta /atlas/src/trunk/red/subarrays.pro ${tempimg} ${tmonstastamps} $stamp_size
-
-  # compress stamps
-  /bin/gzip "${tessetelnite}"/*.fits
+  
 done
 
 # clean up the monsta command files
