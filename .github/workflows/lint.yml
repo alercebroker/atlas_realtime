@@ -1,8 +1,6 @@
 name: Lint Go Code
 
 on:
-  push:
-    branches: [ "hamba-avro"]
   pull_request:
     branches: [ "master" ]
 

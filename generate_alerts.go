@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -23,7 +25,7 @@ var (
 	ErrorLogger *log.Logger
 )
 
-func init() {
+func configLogs() (*log.Logger, *log.Logger) {
 	var err error
 
 	// Load the configuration file
@@ -33,36 +35,36 @@ func init() {
 	}
 
 	// Logs config
-	eFile, err := os.OpenFile(configuration.ErrFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Logs config
 	lFile, err := os.OpenFile(configuration.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	InfoLogger = log.New(lFile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	ErrorLogger = log.New(eFile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	iLogger := log.New(lFile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	eLogger := log.New(lFile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	return iLogger, eLogger
+}
 
+func db() *mongo.Client {
+	var err error
 	// Database config
 	// Set client options
-	clientOptions := options.Client().ApplyURI("mongodb://" + configuration.MongodbUser + ":" + configuration.MongodbPass + "@" + configuration.MongodbHost + ":" + configuration.MongodbPort + "/?authSource=admin")
+	clientOptions := options.Client().ApplyURI("mongodb://" + configuration.MongodbUser + ":" + configuration.MongodbPass + "@" + configuration.MongodbHost + ":" + configuration.MongodbPort + "/?authSource=staging")
 
 	// Connect to MongoDB
 	client, err = mongo.Connect(context.TODO(), clientOptions)
 
 	if err != nil {
-		ErrorLogger.Fatal("Invalid DB config:", err)
+		log.Fatal("Invalid DB config:", err)
 	}
 
 	// Check the connection
 	err = client.Ping(context.TODO(), nil)
 
 	if err != nil {
-		ErrorLogger.Fatal("DB unreachable:", err)
+		log.Fatal("DB unreachable:", err)
 	}
+	return client
 }
 
 func lastModified(sec int64) time.Time {
@@ -70,6 +72,9 @@ func lastModified(sec int64) time.Time {
 }
 
 func main() {
+
+	InfoLogger, ErrorLogger = configLogs()
+	client = db()
 
 	// Load schemas in a given folder
 	schemaCandidate, err := avro.ParseFiles("schema/candidate.avsc")
@@ -121,6 +126,13 @@ func main() {
 		if err != nil {
 			ErrorLogger.Println(err)
 			continue
+		}
+
+		previousId, err := getOrCreateId(atlasRecord.ObjectId, atlasRecord.Candidate.RA, atlasRecord.Candidate.Dec)
+		if err != nil {
+			ErrorLogger.Println(err)
+		} else {
+			atlasRecord.ObjectId = previousId
 		}
 
 		err = saveAvroFile(directory+"/"+outputDir+"/"+atlasRecord.Candid+".avro", schema, atlasRecord)
@@ -228,4 +240,109 @@ func loadAvroFile(infoFile string) (*AtlasRecord, error) {
 		}
 	}
 	return record, nil
+}
+
+func getOrCreateId(s string, ra float64, dec float64) (string, error) {
+	// get a handle for the trainers collection in the test database
+	collection := client.Database(configuration.Db).Collection(configuration.Col)
+
+	// Find documents
+	// Pass these options to the Find method
+	findOptions := options.Find()
+	findOptions.SetLimit(1)
+	findOptions.SetProjection(bson.D{{Key: "_id", Value: 1}})
+
+	// Passing bson.D{{}} as the filter matches all documents in the collection
+	radius := RADIUS / 3600
+	scaling := wgsScale(dec)
+	meterRadius := radius * scaling
+	lon, lat := ra-180.0, dec
+
+	filter := bson.D{
+		{
+			Key: "loc",
+			Value: bson.D{
+				{
+					Key: "$nearSphere",
+					Value: bson.D{
+						{
+							Key: "$geometry",
+							Value: bson.D{
+								{
+									Key:   "type",
+									Value: "Point",
+								},
+								{
+									Key:   "coordinates",
+									Value: bson.A{lon, lat},
+								},
+							},
+						},
+						{
+							Key:   "$maxDistance",
+							Value: meterRadius,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	cur, err := collection.Find(context.TODO(), filter, findOptions)
+	if err != nil {
+		return s, err
+	}
+
+	// Finding multiple documents returns a cursor
+	// Iterating through the cursor allows us to decode documents one at a time
+	if cur.Next(context.TODO()) {
+
+		// create a value into which the single document can be decoded
+		elem := struct {
+			ObjectId string `bson:"_id"`
+		}{}
+		err := cur.Decode(&elem)
+		if err != nil {
+			return s, err
+		}
+
+		return elem.ObjectId, nil
+	}
+
+	asht := bson.D{
+		{
+			Key: "_id", Value: s,
+		},
+		{
+			Key: "loc", Value: bson.D{
+				{
+					Key: "type", Value: "Point",
+				},
+				{
+					Key: "coordinates", Value: bson.A{lon, lat},
+				},
+			},
+		},
+	}
+
+	_, err = collection.InsertOne(context.TODO(), asht)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return s, nil
+}
+
+func wgsScale(lat float64) float64 {
+	/*
+		Get scaling to convert degrees to meters at a given geodetic latitude (declination)
+		:param lat: geodetic latitude (declination)
+		:return:
+	*/
+	// Compute radius of curvature along meridian (see https://en.wikipedia.org/wiki/Meridian_arc)
+	rm := a * (1 - math.Pow(e, 2)) / math.Pow(1-math.Pow(e, 2)*math.Pow(math.Sin(lat*math.Pi/180), 2), 1.5)
+
+	// Compute length of arc at this latitude (meters/degree)
+	arc := rm * angle
+	return arc
 }
