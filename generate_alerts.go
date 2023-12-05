@@ -8,7 +8,6 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -103,9 +102,7 @@ func main() {
 	res1 := strings.Split(directory, "_")
 	telNight := res1[len(res1)-1]
 	tel := telNight[:3]
-	night, _ := strconv.ParseInt(telNight[3:], 10, 64)
-	topic := lastModified((night - 40586) * 86400)
-	topics := "ATLAS_" + topic.Format("20060102") + "_" + tel
+	topics := "atlas"
 
 	// Extension of files that contain the alert information
 	infoExtension := ".info"
