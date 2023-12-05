@@ -48,20 +48,20 @@ func db() *mongo.Client {
 	var err error
 	// Database config
 	// Set client options
-	clientOptions := options.Client().ApplyURI("mongodb://" + configuration.MongodbUser + ":" + configuration.MongodbPass + "@" + configuration.MongodbHost + ":" + configuration.MongodbPort + "/?authSource=staging")
+	clientOptions := options.Client().ApplyURI("mongodb://" + configuration.MongodbUser + ":" + configuration.MongodbPass + "@" + configuration.MongodbHost + ":" + configuration.MongodbPort)
 
 	// Connect to MongoDB
 	client, err = mongo.Connect(context.TODO(), clientOptions)
 
 	if err != nil {
-		log.Fatal("Invalid DB config:", err)
+		log.Fatal("Invalid MongoDB config:", err)
 	}
 
 	// Check the connection
 	err = client.Ping(context.TODO(), nil)
 
 	if err != nil {
-		log.Fatal("DB unreachable:", err)
+		log.Fatal("MongoDB unreachable:", err)
 	}
 	return client
 }
