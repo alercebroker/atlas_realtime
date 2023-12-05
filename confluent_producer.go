@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 )
 
-func produce(directory string, topic string, server string) error {
+func produce(directory string, topic string, server string, user string, password string) error {
 	files, err := ioutil.ReadDir(directory)
 	if err != nil {
 		return err
@@ -14,6 +14,10 @@ func produce(directory string, topic string, server string) error {
 	p, err := kafka.NewProducer(&kafka.ConfigMap{
 		"bootstrap.servers": server,
 		"linger.ms":         5,
+		"sasl.mechanisms":   "SCRAM-SHA-512",
+		"security.protocol": "SASL_SSL",
+		"sasl.username":     user,
+		"sasl.password":     password,
 	})
 
 	if err != nil {

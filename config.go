@@ -15,6 +15,8 @@ type Configuration struct {
 	Db              string
 	Col             string
 	KafkaServer     string
+	KafkaUser       string
+	KafkaPassword   string
 	LogFile         string
 	ErrFile         string
 }

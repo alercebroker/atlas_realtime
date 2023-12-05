@@ -139,7 +139,7 @@ func main() {
 
 	}
 
-	err = produce(directory+"/"+outputDir, topics, configuration.KafkaServer)
+	err = produce(directory+"/"+outputDir, topics, configuration.KafkaServer, configuration.KafkaUser, configuration.KafkaPassword)
 	if err != nil {
 		ErrorLogger.Println(err)
 	}
