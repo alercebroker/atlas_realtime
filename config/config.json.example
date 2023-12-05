@@ -1,0 +1,12 @@
+{
+  "OutputDirectory": "avro",
+  "mongodbHost": "",
+  "mongodbPort": "",
+  "mongodbUser": "",
+  "mongodbPass": "",
+  "db":          "",
+  "col" :        "",
+  "kafkaServer": "",
+  "logFile": "",
+  "errFile": ""
+}
